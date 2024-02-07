@@ -40,6 +40,9 @@ class FileMetadata:
     audio: AudioMetadata
     video: VideoMetadata
 
+    # TODO: Add tags
+    tags: dict = None
+
 
 def calc_aspect_ratio(width: int, height: int):
     """Calculate the aspect ratio of the video by simplifying the fraction"""

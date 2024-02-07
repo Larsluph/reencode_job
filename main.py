@@ -2,9 +2,10 @@ import argparse
 import sys
 from enum import Enum
 from os import walk
-from os.path import isfile, isdir, join
+from os.path import isfile, isdir, join, splitext
 from pprint import pprint
 
+from command_generator import generate_ffmpeg_command
 from filechecker import check_file_ext, check_file
 from fileparser import probe_file
 
@@ -69,5 +70,10 @@ for file in files:
     print(f'Processing {file}')
 
     file_metadata = probe_file(file)
+    errors = check_file(file_metadata)
+    name, ext = splitext(file)
+    cmd = generate_ffmpeg_command(file, f"{name}_reencoded.mp4", errors)
+
     pprint(file_metadata)
-    pprint(check_file(file_metadata))
+    pprint(errors)
+    print(cmd)

@@ -19,6 +19,10 @@ class FileCheckError(Flag):
     VIDEO_BITRATE = auto()
     VIDEO_FPS = auto()
 
+    # Combined errors
+    ANY_AUDIO = AUDIO_CODEC | AUDIO_SAMPLE_RATE | AUDIO_CHANNELS | AUDIO_BITRATE
+    ANY_VIDEO = VIDEO_CODEC | VIDEO_RESOLUTION | VIDEO_BITRATE | VIDEO_FPS
+
 
 def check_file_ext(file_path: str) -> bool:
     """Check if the file extension is in the whitelist"""
@@ -52,7 +56,7 @@ def check_file(metadata: FileMetadata) -> FileCheckError:
     if metadata.video.width > 1920 or metadata.video.height > 1080:
         errors |= FileCheckError.VIDEO_RESOLUTION
 
-    if metadata.video.bitrate > 1_000_000:
+    if metadata.video.bitrate > 1_000_000:  # TODO: measure value
         errors |= FileCheckError.VIDEO_BITRATE
 
     if metadata.video.frame_rate > 30:
