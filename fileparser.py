@@ -12,6 +12,7 @@ class AudioMetadata:
     sample_rate: int
     channels: int
     bitrate: int
+    tags: dict
 
 
 @dataclass
@@ -23,6 +24,7 @@ class VideoMetadata:
     aspect_ratio: str
     frame_rate: float
     bitrate: int
+    tags: dict
 
     @property
     def is_portrait(self):
@@ -39,9 +41,7 @@ class FileMetadata:
 
     audio: AudioMetadata
     video: VideoMetadata
-
-    # TODO: Add tags
-    tags: dict = None
+    tags: dict
 
 
 def calc_aspect_ratio(width: int, height: int):
@@ -74,12 +74,18 @@ def probe_file(file_path: str) -> Optional[FileMetadata]:
         if stream['codec_type'] == 'video':
             video_stream = stream
             break
+    else:
+        print("No video stream found")
+        return None
 
     # Detect audio stream
     for stream in json_output['streams']:
         if stream['codec_type'] == 'audio':
             audio_stream = stream
             break
+    else:
+        print("No audio stream found")
+        return None
 
     video_width: int = video_stream['width']
     video_height: int = video_stream['height']
@@ -91,11 +97,14 @@ def probe_file(file_path: str) -> Optional[FileMetadata]:
         audio=AudioMetadata(codec=audio_stream['codec_name'],
                             sample_rate=int(audio_stream['sample_rate']),
                             channels=int(audio_stream['channels']),
-                            bitrate=int(audio_stream['bit_rate'])),
+                            bitrate=int(audio_stream['bit_rate']),
+                            tags=audio_stream['tags'] if 'tags' in audio_stream else {}),
         video=VideoMetadata(codec=video_stream['codec_name'],
                             width=video_width,
                             height=video_height,
                             aspect_ratio=calc_aspect_ratio(video_width, video_height),
                             frame_rate=eval(video_stream['r_frame_rate']),
-                            bitrate=float(video_stream['bit_rate']))
+                            bitrate=float(video_stream['bit_rate']),
+                            tags=video_stream['tags'] if 'tags' in video_stream else {}),
+        tags=json_output['format']['tags'] if 'tags' in json_output['format'] else {}
     )
