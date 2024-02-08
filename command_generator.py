@@ -29,9 +29,6 @@ def generate_ffmpeg_command(input_file: str, output_file: str, errors: FileCheck
     if errors & FileCheckError.VIDEO_RESOLUTION:
         params.append("-vf scale=1920:1080")
 
-    if errors & FileCheckError.VIDEO_BITRATE:
-        params.append("-b:v 1M")
-
     if errors & FileCheckError.VIDEO_FPS:
         params.append("-r 30")
 
