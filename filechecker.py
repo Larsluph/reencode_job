@@ -21,6 +21,7 @@ class FileCheckError(Flag):
     # Combined errors
     ANY_AUDIO = AUDIO_CODEC | AUDIO_SAMPLE_RATE | AUDIO_CHANNELS | AUDIO_BITRATE
     ANY_VIDEO = VIDEO_CODEC | VIDEO_RESOLUTION | VIDEO_FPS
+    ANY = ANY_AUDIO | ANY_VIDEO
 
 
 def check_file_ext(file_path: str) -> bool:
@@ -34,28 +35,34 @@ def check_file(metadata: FileMetadata) -> FileCheckError:
     errors = FileCheckError(0)
 
     ### Check audio
+    audio = metadata.audio
 
-    if metadata.audio.codec != 'aac':
+    if audio.codec != 'aac':
         errors |= FileCheckError.AUDIO_CODEC
 
-    if metadata.audio.sample_rate > 48000:
+    if audio.sample_rate > 48000:
         errors |= FileCheckError.AUDIO_SAMPLE_RATE
 
-    if metadata.audio.channels > 2:
+    if audio.channels > 2:
         errors |= FileCheckError.AUDIO_CHANNELS
 
-    if metadata.audio.bitrate > 192000:
+    if audio.bitrate > 192000:
         errors |= FileCheckError.AUDIO_BITRATE
 
     ### Check video
+    video = metadata.video
 
-    if metadata.video.codec != 'hevc':
+    if video.codec != 'hevc':
         errors |= FileCheckError.VIDEO_CODEC
 
-    if metadata.video.width > 1920 or metadata.video.height > 1080:
+    width, height = (video.width, video.height)
+    if video.is_portrait:
+        width, height = height, width
+
+    if width > 1920 or height > 1080:
         errors |= FileCheckError.VIDEO_RESOLUTION
 
-    if metadata.video.frame_rate > 30:
+    if video.frame_rate > 30:
         errors |= FileCheckError.VIDEO_FPS
 
     return errors

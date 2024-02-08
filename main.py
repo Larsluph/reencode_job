@@ -4,6 +4,7 @@ from enum import Enum
 from os import walk
 from os.path import isfile, isdir, join, splitext
 from pprint import pprint
+from subprocess import run, CalledProcessError
 
 from command_generator import generate_ffmpeg_command
 from filechecker import check_file_ext, check_file
@@ -72,8 +73,17 @@ for file in files:
     file_metadata = probe_file(file)
     errors = check_file(file_metadata)
     name, ext = splitext(file)
-    cmd = generate_ffmpeg_command(file, f"{name}_reencoded.mp4", errors)
+    cmd = generate_ffmpeg_command(file, f"{name}_reencoded.mp4", file_metadata, errors)
 
     pprint(file_metadata)
     pprint(errors)
     print(cmd)
+
+    if is_dry_run:
+        continue
+
+    try:
+        result = run(cmd, shell=True, check=True, capture_output=True, text=True)
+    except CalledProcessError as e:
+        print("Unable to reencode file:", e.stderr)
+        continue
