@@ -12,10 +12,7 @@ from command_generator import generate_ffmpeg_command
 from filechecker import check_file_ext, check_file
 from fileparser import probe_file
 
-# Create the parser
 parser = argparse.ArgumentParser(description="Video re-encoder with ffmpeg")
-
-# Add arguments
 parser.add_argument('path', type=str, help='path to video content')
 parser.add_argument('-d', '--dry-run', action='store_true',
                     help='perform a trial run without changes made')
@@ -25,22 +22,20 @@ parser.add_argument('--replace', action='store_true',
                     help='replace original content with the processed one')
 parser.add_argument('--clean-on-error', action='store_true',
                     help='remove processed content if an error occurs')
-
-# Parse the arguments
 args = parser.parse_args()
 
-fh = logging.FileHandler(join(dirname(sys.argv[0]), datetime.now().strftime("%Y-%m-%d_%H-%M-%S.log")))
+fh = logging.FileHandler(join(dirname(sys.argv[0]),
+                              datetime.now().strftime("%Y-%m-%d_%H-%M-%S.log")))
 fh.setLevel(logging.DEBUG)
-
 sh = logging.StreamHandler(stdout)
 sh.setLevel(logging.INFO)
-
 logging.basicConfig(level=logging.DEBUG,
                     format='[%(levelname)s]:%(asctime)s %(message)s',
                     handlers=(fh, sh))
 
 
 class ContentType(Enum):
+    """Content type enum"""
     FILE = 1
     DIRECTORY = 2
 
@@ -78,8 +73,8 @@ if contentType == ContentType.FILE:
     files = [contentPath]
 else:
     # Search for files in the directory and all subdirectories matching the whitelisted extensions
-    directories_count = 0
-    files_count = 0
+    directories_count: int = 0
+    files_count: int = 0
     files = []
     for root, _, filenames in walk(contentPath):
         directories_count += 1
@@ -97,7 +92,7 @@ for input_filename in files:
 
     file_metadata = probe_file(input_filename)
     if file_metadata is None:
-        logging.info('Skipping...')
+        logging.info('Skipping')
         continue
 
     errors = check_file(file_metadata)
@@ -113,7 +108,7 @@ for input_filename in files:
         continue
 
     if not errors:
-        logging.info('Video matches expectations, skipping...')
+        logging.info('Video matches expectations, skipping')
         continue
 
     with Popen(cmd, stdout=PIPE, stderr=STDOUT, universal_newlines=True) as process:

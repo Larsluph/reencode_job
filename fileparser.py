@@ -45,6 +45,11 @@ class FileMetadata:
     tags: dict
 
 
+def parse_frame_rate(frame_rate: str) -> float:
+    num, denom = map(int, frame_rate.split('/'))
+    return num / denom
+
+
 def calc_aspect_ratio(width: int, height: int):
     """Calculate the aspect ratio of the video by simplifying the fraction"""
     divisor = gcd(width, height)
@@ -104,7 +109,7 @@ def probe_file(file_path: str) -> Optional[FileMetadata]:
                             width=video_width,
                             height=video_height,
                             aspect_ratio=calc_aspect_ratio(video_width, video_height),
-                            frame_rate=eval(video_stream['r_frame_rate']),
+                            frame_rate=parse_frame_rate(video_stream['r_frame_rate']),
                             bitrate=float(video_stream['bit_rate']),
                             tags=video_stream['tags'] if 'tags' in video_stream else {}),
         tags=json_output['format']['tags'] if 'tags' in json_output['format'] else {}
