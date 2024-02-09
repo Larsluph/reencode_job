@@ -3,7 +3,7 @@ import logging
 import sys
 from datetime import datetime
 from enum import Enum
-from os import rename, walk
+from os import remove, rename, walk
 from os.path import isfile, isdir, join, splitext
 from subprocess import Popen, PIPE, STDOUT
 from sys import stdout
@@ -21,6 +21,8 @@ parser.add_argument('-d', '--dry-run', action='store_true',
                     help='Using this flag will not affect the content, used for debugging')
 parser.add_argument('-rm', '--remove', action='store_true',
                     help='Using this flag will remove the content after processing')
+parser.add_argument('--replace', action='store_true',
+                    help='Using this flag will replace the original content with the reencoded one')
 
 # Parse the arguments
 args = parser.parse_args()
@@ -58,6 +60,7 @@ else:
 
 is_dry_run_enabled: bool = args.dry_run
 is_remove_enabled: bool = args.remove
+is_replace_enabled: bool = args.replace
 
 # Check if dry run flag is set
 if is_dry_run_enabled:
@@ -108,7 +111,11 @@ for input_filename in files:
             logging.error('Failed to process %s', input_filename)
             continue
 
-        if is_remove_enabled:
-            logging.info('Removing %s', input_filename)
+        if is_replace_enabled:
+            logging.info('Replacing %s', input_filename)
             # Replace the original file
             rename(input_filename, output_filename)
+        elif is_remove_enabled:
+            logging.info('Removing %s', input_filename)
+            # Remove the original file
+            remove(input_filename)
