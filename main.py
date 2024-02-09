@@ -90,6 +90,10 @@ for input_filename in files:
     logging.info('Processing "%s"', input_filename)
 
     file_metadata = probe_file(input_filename)
+    if file_metadata is None:
+        logging.info('Skipping...')
+        continue
+
     errors = check_file(file_metadata)
     name, ext = splitext(input_filename)
     output_filename = f"{name}_reencoded.mp4"

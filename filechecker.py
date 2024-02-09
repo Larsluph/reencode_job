@@ -19,6 +19,7 @@ class FileCheckError(Flag):
     VIDEO_FPS = auto()
 
     # Combined errors
+    NONE = 0
     ANY_AUDIO = AUDIO_CODEC | AUDIO_SAMPLE_RATE | AUDIO_CHANNELS | AUDIO_BITRATE
     ANY_VIDEO = VIDEO_CODEC | VIDEO_RESOLUTION | VIDEO_FPS
     ANY = ANY_AUDIO | ANY_VIDEO
@@ -32,7 +33,7 @@ def check_file_ext(file_path: str) -> bool:
 
 def check_file(metadata: FileMetadata) -> FileCheckError:
     """Check if the file meets the requirements"""
-    errors = FileCheckError(0)
+    errors = FileCheckError.NONE
 
     ### Check audio
     audio = metadata.audio
