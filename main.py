@@ -92,6 +92,10 @@ for file in files:
     if is_dry_run:
         continue
 
+    if not errors:
+        logging.info('Video matches expectations, skipping...')
+        continue
+
     with Popen(cmd, stdout=PIPE, stderr=STDOUT, universal_newlines=True) as process:
         for line in process.stdout:
             logging.debug(line.rstrip())
