@@ -23,6 +23,8 @@ parser.add_argument('-rm', '--remove', action='store_true',
                     help='Using this flag will remove the content after processing')
 parser.add_argument('--replace', action='store_true',
                     help='Using this flag will replace the original content with the reencoded one')
+parser.add_argument('--clean-on-error', action='store_true',
+                    help='Using this flag will remove the reencoded content if an error occurs while reencoding')
 
 # Parse the arguments
 args = parser.parse_args()
@@ -61,6 +63,7 @@ else:
 is_dry_run_enabled: bool = args.dry_run
 is_remove_enabled: bool = args.remove
 is_replace_enabled: bool = args.replace
+is_clean_on_error_enabled: bool = args.clean_on_error
 
 # Check if dry run flag is set
 if is_dry_run_enabled:
@@ -84,7 +87,7 @@ else:
         files.extend(join(root, filename) for filename in filenames if check_file_ext(filename))
 
 for input_filename in files:
-    logging.info('Processing %s', input_filename)
+    logging.info('Processing "%s"', input_filename)
 
     file_metadata = probe_file(input_filename)
     errors = check_file(file_metadata)
@@ -108,14 +111,17 @@ for input_filename in files:
             logging.debug(line.rstrip())
 
         if process.returncode != 0:
-            logging.error('Failed to process %s', input_filename)
+            logging.error('Failed to process "%s"', input_filename)
+            if is_clean_on_error_enabled:
+                logging.info('Removing failed "%s"', output_filename)
+                remove(output_filename)
             continue
 
         if is_replace_enabled:
-            logging.info('Replacing %s', input_filename)
+            logging.info('Replacing "%s"', input_filename)
             # Replace the original file
             rename(input_filename, output_filename)
         elif is_remove_enabled:
-            logging.info('Removing %s', input_filename)
+            logging.info('Removing "%s"', input_filename)
             # Remove the original file
             remove(input_filename)
