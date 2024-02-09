@@ -12,6 +12,22 @@ This project aims at providing an automated way to reencode video based on stati
   - Resolution
   - FPS
 
+```txt
+usage: main.py [-h] [-d] [-rm] [--replace] [--clean-on-error] path
+
+Video re-encoder with ffmpeg
+
+positional arguments:
+  path              path to video content
+
+options:
+  -h, --help        show this help message and exit
+  -d, --dry-run     perform a trial run without changes made
+  -rm, --remove     remove original content after processing
+  --replace         replace original content with the processed one
+  --clean-on-error  remove processed content if an error occurs
+```
+
 ## Requirements
 
 - Python 3.12+
@@ -31,7 +47,7 @@ cd reencode_job
 ### From source
 
 ```sh
-python3 main.py [-h] [-d] path
+python3 main.py [-h] [-d] [-rm] [--replace] [--clean-on-error] path
 ```
 
 ### Using docker

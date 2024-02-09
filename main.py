@@ -13,18 +13,18 @@ from filechecker import check_file_ext, check_file
 from fileparser import probe_file
 
 # Create the parser
-parser = argparse.ArgumentParser(description="Command parser for CLI")
+parser = argparse.ArgumentParser(description="Video re-encoder with ffmpeg")
 
 # Add arguments
-parser.add_argument('path', type=str, help='The path to the content')
+parser.add_argument('path', type=str, help='path to video content')
 parser.add_argument('-d', '--dry-run', action='store_true',
-                    help='Using this flag will not affect the content, used for debugging')
+                    help='perform a trial run without changes made')
 parser.add_argument('-rm', '--remove', action='store_true',
-                    help='Using this flag will remove the content after processing')
+                    help='remove original content after processing')
 parser.add_argument('--replace', action='store_true',
-                    help='Using this flag will replace the original content with the reencoded one')
+                    help='replace original content with the processed one')
 parser.add_argument('--clean-on-error', action='store_true',
-                    help='Using this flag will remove the reencoded content if an error occurs while reencoding')
+                    help='remove processed content if an error occurs')
 
 # Parse the arguments
 args = parser.parse_args()
