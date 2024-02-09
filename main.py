@@ -3,7 +3,7 @@ import logging
 import sys
 from datetime import datetime
 from enum import Enum
-from os import walk
+from os import rename, walk
 from os.path import isfile, isdir, join, splitext
 from subprocess import Popen, PIPE, STDOUT
 from sys import stdout
@@ -19,6 +19,8 @@ parser = argparse.ArgumentParser(description="Command parser for CLI")
 parser.add_argument('path', type=str, help='The path to the content')
 parser.add_argument('-d', '--dry-run', action='store_true',
                     help='Using this flag will not affect the content, used for debugging')
+parser.add_argument('-rm', '--remove', action='store_true',
+                    help='Using this flag will remove the content after processing')
 
 # Parse the arguments
 args = parser.parse_args()
@@ -54,10 +56,11 @@ else:
     logging.error("Unknown content type")
     sys.exit(2)
 
-is_dry_run = args.dry_run
+is_dry_run_enabled: bool = args.dry_run
+is_remove_enabled: bool = args.remove
 
 # Check if dry run flag is set
-if is_dry_run:
+if is_dry_run_enabled:
     logging.info("Dry run enabled")
 
 if contentType == ContentType.FILE:
@@ -77,19 +80,20 @@ else:
         logging.debug('Scanned %s directories and %s files', directories_count, files_count)
         files.extend(join(root, filename) for filename in filenames if check_file_ext(filename))
 
-for file in files:
-    logging.info('Processing %s', file)
+for input_filename in files:
+    logging.info('Processing %s', input_filename)
 
-    file_metadata = probe_file(file)
+    file_metadata = probe_file(input_filename)
     errors = check_file(file_metadata)
-    name, ext = splitext(file)
-    cmd = generate_ffmpeg_command(file, f"{name}_reencoded.mp4", file_metadata, errors)
+    name, ext = splitext(input_filename)
+    output_filename = f"{name}_reencoded.mp4"
+    cmd = generate_ffmpeg_command(input_filename, output_filename, file_metadata, errors)
 
     logging.debug(file_metadata)
     logging.debug(errors)
     logging.debug(cmd)
 
-    if is_dry_run:
+    if is_dry_run_enabled:
         continue
 
     if not errors:
@@ -99,3 +103,12 @@ for file in files:
     with Popen(cmd, stdout=PIPE, stderr=STDOUT, universal_newlines=True) as process:
         for line in process.stdout:
             logging.debug(line.rstrip())
+
+        if process.returncode != 0:
+            logging.error('Failed to process %s', input_filename)
+            continue
+
+        if is_remove_enabled:
+            logging.info('Removing %s', input_filename)
+            # Replace the original file
+            rename(input_filename, output_filename)
