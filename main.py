@@ -115,8 +115,9 @@ for input_filename in files:
         for line in process.stdout:
             logging.debug(line.rstrip())
 
-        if process.returncode != 0:
-            logging.error('Failed to process "%s"', input_filename)
+        if process.wait() != 0:
+            logging.error('Failed to process "%s": return code was %d',
+                          input_filename, process.returncode)
             if is_clean_on_error_enabled:
                 logging.info('Removing failed "%s"', output_filename)
                 remove(output_filename)
