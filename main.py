@@ -70,8 +70,9 @@ if is_dry_run_enabled:
     logging.info("Dry run enabled")
 
 if contentType == ContentType.FILE:
-    if not check_file_ext(contentPath):
-        logging.error("File extension not in whitelist")
+    is_valid, ext = check_file_ext(contentPath)
+    if not is_valid:
+        logging.error('Extension "%s" not in whitelist', ext)
         sys.exit(3)
 
     files = [contentPath]
@@ -84,7 +85,12 @@ else:
         directories_count += 1
         files_count += len(filenames)
         logging.debug('Scanned %s directories and %s files', directories_count, files_count)
-        files.extend(join(root, filename) for filename in filenames if check_file_ext(filename))
+        for filename in filenames:
+            is_valid, ext = check_file_ext(filename)
+            if is_valid:
+                files.append(join(root, filename))
+            else:
+                logging.info('Extension "%s" not in whitelist, skipping', ext)
 
 for input_filename in files:
     logging.info('Processing "%s"', input_filename)

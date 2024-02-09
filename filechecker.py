@@ -27,8 +27,9 @@ class FileCheckError(Flag):
 
 def check_file_ext(file_path: str) -> bool:
     """Check if the file extension is in the whitelist"""
-    ext_whitelist = ['.mp4', '.mov', '.mkv', '.wmv']
-    return splitext(file_path)[1] in ext_whitelist
+    ext_whitelist = ['.avi', '.mp4', '.mov', '.mkv', '.wmv']
+    ext = splitext(file_path)[1]
+    return ext in ext_whitelist, ext
 
 
 def check_file(metadata: FileMetadata) -> FileCheckError:
