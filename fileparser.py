@@ -1,3 +1,4 @@
+import logging
 from dataclasses import dataclass
 from json import loads as load_json
 from math import gcd
@@ -59,8 +60,8 @@ def probe_file(file_path: str) -> Optional[FileMetadata]:
                     capture_output=True,
                     check=True,
                     text=True)
-    except CalledProcessError as e:
-        print("Unable to probe file:", e.stderr)
+    except CalledProcessError:
+        logging.exception("Unable to probe file:")
         return None
 
     output = result.stdout
@@ -75,7 +76,7 @@ def probe_file(file_path: str) -> Optional[FileMetadata]:
             video_stream = stream
             break
     else:
-        print("No video stream found")
+        logging.error("No video stream found")
         return None
 
     # Detect audio stream
@@ -84,7 +85,7 @@ def probe_file(file_path: str) -> Optional[FileMetadata]:
             audio_stream = stream
             break
     else:
-        print("No audio stream found")
+        logging.error("No audio stream found")
         return None
 
     video_width: int = video_stream['width']
