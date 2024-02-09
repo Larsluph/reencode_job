@@ -4,11 +4,12 @@ import sys
 from datetime import datetime
 from enum import Enum
 from os import remove, rename, walk
-from os.path import dirname, isfile, isdir, join, splitext
+from os.path import isfile, isdir, join, splitext
 from subprocess import Popen, PIPE, STDOUT
 from sys import stdout
 
 from command_generator import generate_ffmpeg_command
+from config import LOG_LOCATION, LOG_DATE_FORMAT, LOG_MESSAGE_FORMAT
 from filechecker import check_file_ext, check_file
 from fileparser import probe_file
 
@@ -24,14 +25,16 @@ parser.add_argument('--clean-on-error', action='store_true',
                     help='remove processed content if an error occurs')
 args = parser.parse_args()
 
-fh = logging.FileHandler(join(dirname(sys.argv[0]),
-                              datetime.now().strftime("%Y-%m-%d_%H-%M-%S.log")))
+fh = logging.FileHandler(join(LOG_LOCATION,
+                              datetime.now().strftime(LOG_DATE_FORMAT)))
 fh.setLevel(logging.DEBUG)
 sh = logging.StreamHandler(stdout)
 sh.setLevel(logging.INFO)
 logging.basicConfig(level=logging.DEBUG,
-                    format='[%(levelname)s]:%(asctime)s %(message)s',
+                    format=LOG_MESSAGE_FORMAT,
                     handlers=(fh, sh))
+
+logging.info('Starting new job with params: %s', args)
 
 
 class ContentType(Enum):

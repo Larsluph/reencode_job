@@ -1,5 +1,6 @@
 from os.path import basename, splitext
 
+from config import CRITERIAS
 from filechecker import FileCheckError
 from fileparser import FileMetadata, VideoMetadata
 
@@ -45,22 +46,22 @@ def generate_ffmpeg_command(input_file: str,
             '-metadata', f'title={titles[0]}',
         ))
 
-    return ['ffmpeg', '-y', '-i', input_file, *params, output_file]
+    return list(map(str, ('ffmpeg', '-y', '-i', input_file, *params, output_file)))
 
 def generate_audio_params(errors: FileCheckError):
     params = []
 
     if errors & FileCheckError.AUDIO_CODEC:
-        params.extend(('-c:a', 'aac'))
+        params.extend(('-c:a', CRITERIAS['audio']['codec']))
 
     if errors & FileCheckError.AUDIO_SAMPLE_RATE:
-        params.extend(('-ar', '48000'))
+        params.extend(('-ar', CRITERIAS['audio']['sample_rate']))
 
     if errors & FileCheckError.AUDIO_CHANNELS:
-        params.extend(('-ac', '2'))
+        params.extend(('-ac', CRITERIAS['audio']['channels']))
 
     if errors & FileCheckError.AUDIO_BITRATE:
-        params.extend(('-b:a', '192k'))
+        params.extend(('-b:a', CRITERIAS['audio']['bitrate']))
 
     return params
 
@@ -68,12 +69,14 @@ def generate_video_params(metadata: VideoMetadata, errors: FileCheckError):
     params = []
 
     if errors & FileCheckError.VIDEO_CODEC:
-        params.extend(('-c:v', 'hevc'))
+        params.extend(('-c:v', CRITERIAS['video']['codec']))
 
     if errors & FileCheckError.VIDEO_RESOLUTION:
-        params.extend(('-vf', f"scale={'1080:1920' if metadata.is_portrait else '1920:1080'}"))
+        width, height = CRITERIAS['video']['resolution']
+        resolution = f'{height}:{width}' if metadata.is_portrait else f'{width}:{height}'
+        params.extend(('-vf', f"scale={resolution}"))
 
     if errors & FileCheckError.VIDEO_FPS:
-        params.extend(('-r', '30'))
+        params.extend(('-r', CRITERIAS['video']['fps']))
 
     return params

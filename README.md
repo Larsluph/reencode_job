@@ -42,6 +42,10 @@ git clone git@github.com:Larsluph/reencode_job.git
 cd reencode_job
 ```
 
+## Configuration
+
+Everything is configurable from the `config.py` file.
+
 ## Running
 
 ### From source
