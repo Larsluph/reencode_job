@@ -4,7 +4,7 @@ import sys
 from datetime import datetime
 from enum import Enum
 from os import remove, rename, walk
-from os.path import isfile, isdir, join, splitext
+from os.path import dirname, isfile, isdir, join, splitext
 from subprocess import Popen, PIPE, STDOUT
 from sys import stdout
 
@@ -29,7 +29,7 @@ parser.add_argument('--clean-on-error', action='store_true',
 # Parse the arguments
 args = parser.parse_args()
 
-fh = logging.FileHandler(datetime.now().strftime("%Y-%m-%d_%H-%M-%S.log"))
+fh = logging.FileHandler(join(dirname(sys.argv[0]), datetime.now().strftime("%Y-%m-%d_%H-%M-%S.log")))
 fh.setLevel(logging.DEBUG)
 
 sh = logging.StreamHandler(stdout)
