@@ -5,6 +5,7 @@ from datetime import datetime
 from enum import Enum
 from os import remove, rename, walk
 from os.path import isfile, isdir, join, splitext
+from signal import signal, SIGINT, SIGTERM
 from subprocess import Popen, PIPE, STDOUT
 from sys import stdout
 
@@ -62,6 +63,15 @@ is_dry_run_enabled: bool = args.dry_run
 is_remove_enabled: bool = args.remove
 is_replace_enabled: bool = args.replace
 is_clean_on_error_enabled: bool = args.clean_on_error
+is_interrupted: bool = False
+
+def handler(signum, _):
+    global is_interrupted
+    is_interrupted = True
+    logging.warning('Interrupted by signal %d', signum)
+
+signal(SIGINT, handler)
+signal(SIGTERM, handler)
 
 # Check if dry run flag is set
 if is_dry_run_enabled:
@@ -117,6 +127,9 @@ for i, input_filename in enumerate(files, start=1):
     with Popen(cmd, stdout=PIPE, stderr=STDOUT, universal_newlines=True) as process:
         for line in process.stdout:
             logging.debug(line.rstrip())
+            if is_interrupted:
+                process.terminate()
+                break
 
         if process.wait() != 0:
             logging.error('Failed to process "%s": return code was %d',
@@ -124,6 +137,10 @@ for i, input_filename in enumerate(files, start=1):
             if is_clean_on_error_enabled:
                 logging.info('Removing failed "%s"', output_filename)
                 remove(output_filename)
+
+            if is_interrupted:
+                logging.info('Interrupted')
+                break
             continue
 
         if is_replace_enabled:
