@@ -129,7 +129,7 @@ for input_filename in files:
         if is_replace_enabled:
             logging.info('Replacing "%s"', input_filename)
             # Replace the original file
-            rename(input_filename, output_filename)
+            rename(output_filename, input_filename)
         elif is_remove_enabled:
             logging.info('Removing "%s"', input_filename)
             # Remove the original file
