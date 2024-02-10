@@ -8,46 +8,6 @@ from fileparser import FileMetadata, VideoMetadata
 def check_flag_none(errors: FileCheckError, flag: FileCheckError):
     return ~errors & flag == flag
 
-def generate_ffmpeg_command(input_file: str,
-                            output_file: str,
-                            metadata: FileMetadata,
-                            errors: FileCheckError):
-    params = []
-
-    if check_flag_none(errors, FileCheckError.ANY):
-        params.extend(('-c', 'copy'))
-    else:
-        # Audio errors
-        if ~errors & FileCheckError.ANY_AUDIO == FileCheckError.ANY_AUDIO:
-            params.extend(('-c:a', 'copy'))
-        else:
-            params.extend(generate_audio_params(errors))
-
-        # Video errors
-        if ~errors & FileCheckError.ANY_VIDEO == FileCheckError.ANY_VIDEO:
-            params.extend(('-c:v', 'copy'))
-        else:
-            params.extend(generate_video_params(metadata.video, errors))
-
-    name, _ = splitext(basename(input_file))
-    author, *titles = name.split(' - ')
-
-    if len(titles) > 0:
-        # Strip existing tags
-        # for tag_name in metadata.tags.keys():
-        #     params.extend('-metadata', f'{tag_name}=')
-        # for tag_name in metadata.audio.tags.keys():
-        #     params.extend('-metadata:s:a', f'{tag_name}=')
-        # for tag_name in metadata.video.tags.keys():
-        #     params.extend('-metadata:s:v', f'{tag_name}=')
-
-        params.extend((
-            '-metadata', f'author={author}',
-            '-metadata', f'title={titles[0]}',
-        ))
-
-    return list(map(str, ('ffmpeg', '-y', '-i', input_file, *params, output_file)))
-
 def generate_audio_params(errors: FileCheckError):
     params = []
 
@@ -80,3 +40,50 @@ def generate_video_params(metadata: VideoMetadata, errors: FileCheckError):
         params.extend(('-r', CRITERIAS['video']['fps']))
 
     return params
+
+def generate_tag_params(input_file: str):
+    params = []
+
+    name, _ = splitext(basename(input_file))
+    author, *titles = name.split(' - ')
+
+    if len(titles) > 0:
+        # Strip existing tags
+        # for tag_name in metadata.tags.keys():
+        #     params.extend('-metadata', f'{tag_name}=')
+        # for tag_name in metadata.audio.tags.keys():
+        #     params.extend('-metadata:s:a', f'{tag_name}=')
+        # for tag_name in metadata.video.tags.keys():
+        #     params.extend('-metadata:s:v', f'{tag_name}=')
+
+        params.extend((
+            '-metadata', f'author={author}',
+            '-metadata', f'title={titles[0]}',
+        ))
+
+    return params
+
+def generate_ffmpeg_command(input_file: str,
+                            output_file: str,
+                            metadata: FileMetadata,
+                            errors: FileCheckError):
+    params = []
+
+    if check_flag_none(errors, FileCheckError.ANY):
+        params.extend(('-c', 'copy'))
+    else:
+        # Audio errors
+        if check_flag_none(errors, FileCheckError.ANY_AUDIO):
+            params.extend(('-c:a', 'copy'))
+        else:
+            params.extend(generate_audio_params(errors))
+
+        # Video errors
+        if check_flag_none(errors, FileCheckError.ANY_VIDEO):
+            params.extend(('-c:v', 'copy'))
+        else:
+            params.extend(generate_video_params(metadata.video, errors))
+
+    params.extend(generate_tag_params(input_file))
+
+    return list(map(str, ('ffmpeg', '-y', '-i', input_file, *params, output_file)))
