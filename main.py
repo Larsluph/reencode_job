@@ -90,8 +90,8 @@ else:
             else:
                 logging.info('Extension "%s" not in whitelist, skipping', ext)
 
-for input_filename in files:
-    logging.info('Processing "%s"', input_filename)
+for i, input_filename in enumerate(files, start=1):
+    logging.info('[%d/%d] Processing "%s"', i, len(files), input_filename)
 
     file_metadata = probe_file(input_filename)
     if file_metadata is None:
