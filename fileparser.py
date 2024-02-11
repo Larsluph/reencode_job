@@ -99,21 +99,23 @@ def probe_file(file_path: Path) -> Optional[FileMetadata]:
     video_width: int = video_stream['width']
     video_height: int = video_stream['height']
 
+    format_stream: dict = json_output['format']
+
     return FileMetadata(
-        filepath=Path(json_output['format']['filename']),
-        file_size=int(json_output['format']['size']),
-        duration=float(json_output['format']['duration']),
+        filepath=Path(format_stream.get('filename', '')),
+        file_size=int(format_stream.get('size', 0)),
+        duration=float(format_stream.get('duration', 0)),
         audio=AudioMetadata(codec=audio_stream['codec_name'],
-                            sample_rate=int(audio_stream['sample_rate']),
-                            channels=int(audio_stream['channels']),
-                            bitrate=int(audio_stream['bit_rate']),
+                            sample_rate=int(audio_stream.get('sample_rate', 0)),
+                            channels=int(audio_stream.get('channels', 0)),
+                            bitrate=int(audio_stream.get('bit_rate', 0)),
                             tags=audio_stream.get('tags', {})),
         video=VideoMetadata(codec=video_stream['codec_name'],
                             width=video_width,
                             height=video_height,
                             aspect_ratio=calc_aspect_ratio(video_width, video_height),
-                            frame_rate=parse_frame_rate(video_stream['r_frame_rate']),
-                            bitrate=float(video_stream['bit_rate']),
+                            frame_rate=parse_frame_rate(video_stream.get('r_frame_rate', '0/1')),
+                            bitrate=float(video_stream.get('bit_rate', 0)),
                             tags=video_stream.get('tags', {})),
-        tags=json_output.get('format', {}).get('tags', {})
+        tags=format_stream.get('tags', {})
     )
