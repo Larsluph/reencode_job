@@ -2,6 +2,8 @@ import logging
 from dataclasses import dataclass
 from json import loads as load_json
 from math import gcd
+from pathlib import Path
+from shlex import quote
 from subprocess import run, CalledProcessError
 from typing import Optional
 
@@ -36,7 +38,7 @@ class VideoMetadata:
 class FileMetadata:
     "Stores video file metadata"
     # General
-    filepath: str
+    filepath: Path
     file_size: int
     duration: float
 
@@ -56,11 +58,12 @@ def calc_aspect_ratio(width: int, height: int):
     return f'{width // divisor}:{height // divisor}'
 
 
-def probe_file(file_path: str) -> Optional[FileMetadata]:
+def probe_file(file_path: Path) -> Optional[FileMetadata]:
     """Parse the ffprobe output and return a dictionary of the metadata"""
     try:
-        result = run('ffprobe -v error -print_format json -show_format -show_streams '
-                     f'"{file_path}"',
+        result = run('ffprobe -v error -print_format json '
+                     '-show_format -show_streams '
+                     '' + quote(str(file_path)),
                     shell=True,
                     capture_output=True,
                     check=True,
@@ -70,10 +73,10 @@ def probe_file(file_path: str) -> Optional[FileMetadata]:
         return None
 
     output = result.stdout
-    json_output = load_json(output)
+    json_output: dict = load_json(output)
 
-    video_stream: Optional[dict] = None
-    audio_stream: Optional[dict] = None
+    video_stream: dict
+    audio_stream: dict
 
     # Detect video stream
     for stream in json_output['streams']:
@@ -97,20 +100,20 @@ def probe_file(file_path: str) -> Optional[FileMetadata]:
     video_height: int = video_stream['height']
 
     return FileMetadata(
-        filepath=json_output['format']['filename'],
+        filepath=Path(json_output['format']['filename']),
         file_size=int(json_output['format']['size']),
         duration=float(json_output['format']['duration']),
         audio=AudioMetadata(codec=audio_stream['codec_name'],
                             sample_rate=int(audio_stream['sample_rate']),
                             channels=int(audio_stream['channels']),
                             bitrate=int(audio_stream['bit_rate']),
-                            tags=audio_stream['tags'] if 'tags' in audio_stream else {}),
+                            tags=audio_stream.get('tags', {})),
         video=VideoMetadata(codec=video_stream['codec_name'],
                             width=video_width,
                             height=video_height,
                             aspect_ratio=calc_aspect_ratio(video_width, video_height),
                             frame_rate=parse_frame_rate(video_stream['r_frame_rate']),
                             bitrate=float(video_stream['bit_rate']),
-                            tags=video_stream['tags'] if 'tags' in video_stream else {}),
-        tags=json_output['format']['tags'] if 'tags' in json_output['format'] else {}
+                            tags=video_stream.get('tags', {})),
+        tags=json_output.get('format', {}).get('tags', {})
     )

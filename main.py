@@ -29,7 +29,7 @@ def calc_ratio(isize, osize):
 
 
 parser = argparse.ArgumentParser(description="Video re-encoder with ffmpeg")
-parser.add_argument('path', type=str, help='path to video content')
+parser.add_argument('path', type=Path, help='path to video content')
 parser.add_argument('-d', '--dry-run', action='store_true',
                     help='perform a trial run without changes made')
 parser.add_argument('-rm', '--remove', action='store_true',
@@ -59,13 +59,13 @@ class ContentType(Enum):
 
 
 contentType: ContentType
-contentPath = args.path
+contentPath: Path = args.path
 
-if isfile(contentPath):
+if contentPath.is_file():
     contentType = ContentType.FILE
     logging.debug("File detected")
 
-elif isdir(contentPath):
+elif contentPath.is_dir():
     contentType = ContentType.DIRECTORY
     logging.debug("Directory detected")
 
@@ -92,7 +92,7 @@ if is_dry_run_enabled:
     logging.info("Dry run enabled")
 
 if contentType == ContentType.FILE:
-    is_valid, ext = check_file_ext(contentPath)
+    is_valid, ext = check_file_ext(contentPath.name)
     if not is_valid:
         logging.error('Extension "%s" not in whitelist', ext)
         sys.exit(3)
@@ -103,15 +103,16 @@ else:
     directories_count: int = 0
     files_count: int = 0
     files = []
-    for root, _, filenames in walk(contentPath):
+    for root, _, filenames in contentPath.walk():
         directories_count += 1
         files_count += len(filenames)
         logging.debug('Scanned %s directories and %s files', directories_count, files_count)
         for filename in filenames:
             is_valid, ext = check_file_ext(filename)
             if is_valid:
-                files.append(join(root, filename))
+                files.append(Path(root, filename))
             else:
+                # TODO: Count extensions to display a summary at the end
                 logging.info('Extension "%s" not in whitelist, skipping', ext)
 
 for i, input_filename in enumerate(files, start=1):
@@ -123,9 +124,8 @@ for i, input_filename in enumerate(files, start=1):
         continue
 
     errors = check_file(file_metadata)
-    name, ext = splitext(input_filename)
-    output_filename = f"{name}_reencoded.mp4"
-    if exists(output_filename):
+    output_filename = Path(input_filename.parent, f"{input_filename.stem}_reencoded.mp4")
+    if output_filename.exists():
         logging.warning('Output file "%s" already exists, skipping', output_filename)
         continue
     cmd = generate_ffmpeg_command(input_filename, output_filename, file_metadata, errors)
@@ -153,7 +153,7 @@ for i, input_filename in enumerate(files, start=1):
                           input_filename, process.returncode)
             if is_clean_on_error_enabled:
                 logging.info('Removing failed "%s"', output_filename)
-                remove(output_filename)
+                output_filename.unlink()
 
             if is_interrupted:
                 logging.info('Interrupted')
@@ -161,7 +161,7 @@ for i, input_filename in enumerate(files, start=1):
             continue
 
         in_size = file_metadata.file_size
-        out_size = getsize(output_filename)
+        out_size = output_filename.stat().st_size
 
         logging.info('%s -> %s (ratio: %.2fx) (saved: %s)',
                      format_bytes(in_size), format_bytes(out_size),
@@ -170,10 +170,9 @@ for i, input_filename in enumerate(files, start=1):
         if is_replace_enabled:
             logging.info('Replacing "%s"', input_filename)
             # Replace the original file but keep the new extension
-            new_ext = splitext(output_filename)[1]
-            rename(output_filename, Path(input_filename).with_suffix(new_ext))
-            remove(input_filename)
+            rename(output_filename, Path(input_filename).with_suffix(output_filename.suffix))
+            input_filename.unlink()
         elif is_remove_enabled:
             logging.info('Removing "%s"', input_filename)
             # Remove the original file
-            remove(input_filename)
+            input_filename.unlink()

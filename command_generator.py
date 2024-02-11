@@ -1,4 +1,4 @@
-from os.path import basename, splitext
+from pathlib import Path
 
 from config import CRITERIAS
 from filechecker import FileCheckError
@@ -41,11 +41,10 @@ def generate_video_params(metadata: VideoMetadata, errors: FileCheckError):
 
     return params
 
-def generate_tag_params(input_file: str):
+def generate_tag_params(input_file: Path):
     params = []
 
-    name, _ = splitext(basename(input_file))
-    author, *titles = name.split(' - ')
+    author, *titles = input_file.stem.split(' - ')
 
     if len(titles) > 0:
         # Strip existing tags
@@ -63,8 +62,8 @@ def generate_tag_params(input_file: str):
 
     return params
 
-def generate_ffmpeg_command(input_file: str,
-                            output_file: str,
+def generate_ffmpeg_command(input_file: Path,
+                            output_file: Path,
                             metadata: FileMetadata,
                             errors: FileCheckError):
     params = []
@@ -86,4 +85,7 @@ def generate_ffmpeg_command(input_file: str,
 
     params.extend(generate_tag_params(input_file))
 
-    return list(map(str, ('ffmpeg', '-hide_banner', '-y', '-i', input_file, *params, output_file)))
+    return list(map(str, ('ffmpeg', '-hide_banner', '-y',
+                          '-i', input_file,
+                          *params,
+                          output_file)))
