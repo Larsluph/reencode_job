@@ -114,7 +114,7 @@ for i, input_filename in enumerate(files, start=1):
     cmd = generate_ffmpeg_command(input_filename, output_filename, file_metadata, errors)
 
     logging.debug(file_metadata)
-    logging.debug(errors)
+    logging.info(errors)
     logging.debug(cmd)
 
     if is_dry_run_enabled:
