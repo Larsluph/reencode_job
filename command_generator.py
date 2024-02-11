@@ -21,7 +21,7 @@ def generate_audio_params(errors: FileCheckError):
         params.extend(('-ac', CRITERIAS['audio']['channels']))
 
     if errors & FileCheckError.AUDIO_BITRATE:
-        params.extend(('-b:a', CRITERIAS['audio']['bitrate']))
+        params.extend(('-b:a', CRITERIAS['audio']['bitrate'][0]))
 
     return params
 
