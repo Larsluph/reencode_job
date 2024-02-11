@@ -5,6 +5,7 @@ from datetime import datetime
 from enum import Enum
 from os import remove, rename, walk
 from os.path import exists, getsize, isfile, isdir, join, splitext
+from pathlib import Path
 from signal import signal, SIGINT, SIGTERM
 from subprocess import Popen, PIPE, STDOUT
 from sys import stdout
@@ -168,8 +169,10 @@ for i, input_filename in enumerate(files, start=1):
 
         if is_replace_enabled:
             logging.info('Replacing "%s"', input_filename)
-            # Replace the original file
-            rename(output_filename, input_filename)
+            # Replace the original file but keep the new extension
+            new_ext = splitext(output_filename)[1]
+            rename(output_filename, Path(input_filename).with_suffix(new_ext))
+            remove(input_filename)
         elif is_remove_enabled:
             logging.info('Removing "%s"', input_filename)
             # Remove the original file
