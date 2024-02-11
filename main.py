@@ -4,7 +4,7 @@ import sys
 from datetime import datetime
 from enum import Enum
 from os import remove, rename, walk
-from os.path import exists, isfile, isdir, join, splitext
+from os.path import exists, getsize, isfile, isdir, join, splitext
 from signal import signal, SIGINT, SIGTERM
 from subprocess import Popen, PIPE, STDOUT
 from sys import stdout
@@ -13,6 +13,19 @@ from command_generator import generate_ffmpeg_command
 from config import LOG_LOCATION, LOG_DATE_FORMAT, LOG_MESSAGE_FORMAT
 from filechecker import check_file_ext, check_file
 from fileparser import probe_file
+
+
+def format_bytes(num, suffix="B"):
+    for unit in ("", "Ki", "Mi", "Gi", "Ti", "Pi", "Ei", "Zi"):
+        if abs(num) < 1024.0:
+            return f"{num:3.2f} {unit}{suffix}"
+        num /= 1024.0
+    return f"{num:.1f} Yi{suffix}"
+
+
+def calc_ratio(isize, osize):
+    return osize / isize
+
 
 parser = argparse.ArgumentParser(description="Video re-encoder with ffmpeg")
 parser.add_argument('path', type=str, help='path to video content')
@@ -145,6 +158,13 @@ for i, input_filename in enumerate(files, start=1):
                 logging.info('Interrupted')
                 break
             continue
+
+        in_size = file_metadata.file_size
+        out_size = getsize(output_filename)
+
+        logging.info('%s -> %s (ratio: %.2fx) (saved: %s)',
+                     format_bytes(in_size), format_bytes(out_size),
+                     calc_ratio(in_size, out_size), format_bytes(in_size - out_size))
 
         if is_replace_enabled:
             logging.info('Replacing "%s"', input_filename)
