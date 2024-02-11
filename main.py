@@ -134,7 +134,7 @@ for i, input_filename in enumerate(files, start=1):
         if process.wait() != 0:
             logging.error('Failed to process "%s": return code was %d',
                           input_filename, process.returncode)
-            if is_clean_on_error_enabled:
+            if process.returncode != 1 and is_clean_on_error_enabled:
                 logging.info('Removing failed "%s"', output_filename)
                 remove(output_filename)
 
