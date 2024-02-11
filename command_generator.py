@@ -86,4 +86,4 @@ def generate_ffmpeg_command(input_file: str,
 
     params.extend(generate_tag_params(input_file))
 
-    return list(map(str, ('ffmpeg', '-y', '-i', input_file, *params, output_file)))
+    return list(map(str, ('ffmpeg', '-hide_banner', '-y', '-i', input_file, *params, output_file)))

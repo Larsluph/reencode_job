@@ -66,7 +66,7 @@ def probe_file(file_path: str) -> Optional[FileMetadata]:
                     check=True,
                     text=True)
     except CalledProcessError:
-        logging.exception("Unable to probe file:")
+        logging.exception("Unable to probe file")
         return None
 
     output = result.stdout
