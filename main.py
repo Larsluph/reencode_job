@@ -4,7 +4,7 @@ import sys
 from datetime import datetime
 from enum import Enum
 from os import remove, rename, walk
-from os.path import isfile, isdir, join, splitext
+from os.path import exists, isfile, isdir, join, splitext
 from signal import signal, SIGINT, SIGTERM
 from subprocess import Popen, PIPE, STDOUT
 from sys import stdout
@@ -111,17 +111,20 @@ for i, input_filename in enumerate(files, start=1):
     errors = check_file(file_metadata)
     name, ext = splitext(input_filename)
     output_filename = f"{name}_reencoded.mp4"
+    if exists(output_filename):
+        logging.warning('Output file "%s" already exists, skipping', output_filename)
+        continue
     cmd = generate_ffmpeg_command(input_filename, output_filename, file_metadata, errors)
 
     logging.debug(file_metadata)
     logging.info(errors)
     logging.debug(cmd)
 
-    if is_dry_run_enabled:
-        continue
-
     if not errors:
         logging.info('Video matches expectations, skipping')
+        continue
+
+    if is_dry_run_enabled:
         continue
 
     with Popen(cmd, stdout=PIPE, stderr=STDOUT, universal_newlines=True) as process:
@@ -134,7 +137,7 @@ for i, input_filename in enumerate(files, start=1):
         if process.wait() != 0:
             logging.error('Failed to process "%s": return code was %d',
                           input_filename, process.returncode)
-            if process.returncode != 1 and is_clean_on_error_enabled:
+            if is_clean_on_error_enabled:
                 logging.info('Removing failed "%s"', output_filename)
                 remove(output_filename)
 
