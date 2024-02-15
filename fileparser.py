@@ -3,9 +3,11 @@ from dataclasses import dataclass
 from json import loads as load_json
 from math import gcd
 from pathlib import Path
-from shlex import quote
 from subprocess import run, CalledProcessError
 from typing import Optional
+
+
+logger = logging.getLogger('reencode_job.fileparser')
 
 
 @dataclass
@@ -61,15 +63,14 @@ def calc_aspect_ratio(width: int, height: int):
 def probe_file(file_path: Path) -> Optional[FileMetadata]:
     """Parse the ffprobe output and return a dictionary of the metadata"""
     try:
-        result = run('ffprobe -v error -print_format json '
-                     '-show_format -show_streams '
-                     '' + quote(str(file_path)),
+        result = run(('ffprobe', '-v', 'error', '-print_format', 'json',
+                     '-show_format', '-show_streams', str(file_path)),
                     shell=True,
                     capture_output=True,
                     check=True,
                     text=True)
     except CalledProcessError:
-        logging.exception("Unable to probe file")
+        logger.exception("Unable to probe file")
         return None
 
     output = result.stdout
@@ -84,7 +85,7 @@ def probe_file(file_path: Path) -> Optional[FileMetadata]:
             video_stream = stream
             break
     else:
-        logging.error("No video stream found")
+        logger.error("No video stream found")
         return None
 
     # Detect audio stream
@@ -93,7 +94,7 @@ def probe_file(file_path: Path) -> Optional[FileMetadata]:
             audio_stream = stream
             break
     else:
-        logging.error("No audio stream found")
+        logger.error("No audio stream found")
         return None
 
     video_width: int = video_stream['width']
