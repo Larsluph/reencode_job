@@ -91,9 +91,10 @@ class Worker:
             if self.app.is_replace_enabled:
                 logger.info('Replacing "%s"', self.input_filename)
                 # Replace the original file but keep the new extension
-                rename(output_filename,
-                       Path(self.input_filename).with_suffix(output_filename.suffix))
-                self.input_filename.unlink()
+                new_name = Path(self.input_filename).with_suffix(output_filename.suffix)
+                rename(output_filename, new_name)
+                if self.input_filename != new_name:
+                    self.input_filename.unlink()
             elif self.app.is_remove_enabled:
                 logger.info('Removing "%s"', self.input_filename)
                 # Remove the original file
