@@ -1,6 +1,7 @@
 import logging
 import sys
 from argparse import Namespace
+from collections import Counter
 from pathlib import Path
 
 from filechecker import check_file_ext
@@ -45,6 +46,7 @@ class App:
         else:
             directories_count: int = 0
             files_count: int = 0
+            ext_summary = Counter()
             self.files = []
             for root, _, filenames in self.content_path.walk():
                 directories_count += 1
@@ -55,5 +57,8 @@ class App:
                     if is_valid:
                         self.files.append(Path(root, filename))
                     else:
-                        # TODO: Count extensions to display a summary at the end
-                        logger.info('Extension "%s" not in whitelist, skipping', ext)
+                        ext_summary.update((ext,))
+            if ext_summary:
+                logging.info('Skipped extensions:\n%s',
+                             '\n'.join(map(lambda x: f'{x[0]} -> {x[1]}',
+                                           ext_summary.most_common())))
