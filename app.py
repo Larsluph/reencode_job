@@ -62,3 +62,4 @@ class App:
                 logging.info('Skipped extensions:\n%s',
                              '\n'.join(map(lambda x: f'{x[0]} -> {x[1]}',
                                            ext_summary.most_common())))
+        self.files.sort()
