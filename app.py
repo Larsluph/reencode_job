@@ -26,6 +26,7 @@ class App:
         self.is_replace_enabled = args.replace
         self.is_clean_on_error_enabled = args.clean_on_error
         self.is_interrupted = False
+        self.files = []
 
     def handler(self, signum, _):
         self.is_interrupted = True
@@ -42,7 +43,7 @@ class App:
                 logger.error('Extension "%s" not in whitelist', ext)
                 sys.exit(3)
 
-            self.files = [self.content_path]
+            self.files.append(self.content_path)
         else:
             directories_count: int = 0
             files_count: int = 0
@@ -51,15 +52,15 @@ class App:
             for root, _, filenames in self.content_path.walk():
                 directories_count += 1
                 files_count += len(filenames)
-                logger.debug('Scanned %s directories and %s files', directories_count, files_count)
                 for filename in filenames:
                     is_valid, ext = check_file_ext(filename)
                     if is_valid:
                         self.files.append(Path(root, filename))
                     else:
                         ext_summary.update((ext,))
+                logger.debug('Scanned %s directories and %s files', directories_count, files_count)
             if ext_summary:
-                logging.info('Skipped extensions:\n%s',
-                             '\n'.join(map(lambda x: f'{x[0]} -> {x[1]}',
-                                           ext_summary.most_common())))
+                logger.info('Skipped extensions:\n%s',
+                            '\n'.join(map(lambda x: f'{x[0]} -> {x[1]}',
+                                          ext_summary.most_common())))
         self.files.sort()
