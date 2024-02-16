@@ -67,7 +67,6 @@ class Worker:
                 logger.debug(line.rstrip())
                 if self.app.is_interrupted:
                     process.terminate()
-                    return False
 
             if process.wait() != 0:
                 logger.error('Failed to process "%s": return code was %d',
@@ -99,3 +98,4 @@ class Worker:
                 logger.info('Removing "%s"', self.input_filename)
                 # Remove the original file
                 self.input_filename.unlink()
+        return True
