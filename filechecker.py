@@ -39,22 +39,22 @@ def check_file(metadata: FileMetadata) -> FileCheckError:
     ### Check audio
     audio = metadata.audio
 
-    if audio.codec != CRITERIAS['audio']['codec']:
+    if CRITERIAS['audio']['codec'] and audio.codec != CRITERIAS['audio']['codec']:
         errors |= FileCheckError.AUDIO_CODEC
 
-    if audio.sample_rate > CRITERIAS['audio']['sample_rate']:
+    if CRITERIAS['audio']['sample_rate'] and audio.sample_rate > CRITERIAS['audio']['sample_rate']:
         errors |= FileCheckError.AUDIO_SAMPLE_RATE
 
-    if audio.channels > CRITERIAS['audio']['channels']:
+    if CRITERIAS['audio']['channels'] and audio.channels > CRITERIAS['audio']['channels']:
         errors |= FileCheckError.AUDIO_CHANNELS
 
-    if audio.bitrate > CRITERIAS['audio']['bitrate'][1]:
+    if CRITERIAS['audio']['bitrate'] and audio.bitrate > CRITERIAS['audio']['bitrate'][1]:
         errors |= FileCheckError.AUDIO_BITRATE
 
     ### Check video
     video = metadata.video
 
-    if video.codec != CRITERIAS['video']['codec']:
+    if CRITERIAS['video']['codec'] and video.codec != CRITERIAS['video']['codec']:
         errors |= FileCheckError.VIDEO_CODEC
 
     width, height = (video.width, video.height)
@@ -62,10 +62,10 @@ def check_file(metadata: FileMetadata) -> FileCheckError:
         width, height = height, width
 
     target_resolution = CRITERIAS['video']['resolution']
-    if width > target_resolution[0] or height > target_resolution[1]:
+    if target_resolution and (width > target_resolution[0] or height > target_resolution[1]):
         errors |= FileCheckError.VIDEO_RESOLUTION
 
-    if video.frame_rate > CRITERIAS['video']['fps']:
+    if CRITERIAS['video']['fps'] and video.frame_rate > CRITERIAS['video']['fps']:
         errors |= FileCheckError.VIDEO_FPS
 
     return errors
