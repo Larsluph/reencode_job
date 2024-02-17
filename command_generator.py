@@ -2,17 +2,21 @@ from pathlib import Path
 
 from config import CRITERIAS
 from filechecker import FileCheckError
-from fileparser import FileMetadata, VideoMetadata
+from fileparser import AudioMetadata, FileMetadata, VideoMetadata
 
 
 def check_flag_none(errors: FileCheckError, flag: FileCheckError):
     return ~errors & flag == flag
 
-def generate_audio_params(errors: FileCheckError):
+def check_flag_any(errors: FileCheckError, flag: FileCheckError):
+    return errors & flag != 0
+
+def generate_audio_params(metadata: AudioMetadata, errors: FileCheckError):
     params = []
 
-    if errors & FileCheckError.AUDIO_CODEC:
-        params.extend(('-c:a', CRITERIAS['audio']['codec']))
+    if check_flag_any(errors, FileCheckError.ANY_AUDIO):
+        audio_codec = CRITERIAS['audio']['codec']
+        params.extend(('-c:a', audio_codec if audio_codec else metadata.codec))
 
     if errors & FileCheckError.AUDIO_SAMPLE_RATE:
         params.extend(('-ar', CRITERIAS['audio']['sample_rate']))
@@ -28,8 +32,9 @@ def generate_audio_params(errors: FileCheckError):
 def generate_video_params(metadata: VideoMetadata, errors: FileCheckError):
     params = []
 
-    if errors & FileCheckError.VIDEO_CODEC:
-        params.extend(('-c:v', CRITERIAS['video']['codec']))
+    if check_flag_any(errors, FileCheckError.ANY_VIDEO):
+        video_codec = CRITERIAS['video']['codec']
+        params.extend(('-c:v', video_codec if video_codec else metadata.codec))
 
     if errors & FileCheckError.VIDEO_RESOLUTION:
         width, height = CRITERIAS['video']['resolution']
@@ -75,7 +80,7 @@ def generate_ffmpeg_command(input_file: Path,
         if check_flag_none(errors, FileCheckError.ANY_AUDIO):
             params.extend(('-c:a', 'copy'))
         else:
-            params.extend(generate_audio_params(errors))
+            params.extend(generate_audio_params(metadata.audio, errors))
 
         # Video errors
         if check_flag_none(errors, FileCheckError.ANY_VIDEO):
