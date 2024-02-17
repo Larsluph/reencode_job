@@ -1,3 +1,5 @@
+from pathlib import Path
+
 LOG_LOCATION = '/app/logs'
 LOG_DATE_FORMAT = '%Y-%m-%d_%H-%M-%S.log'
 LOG_MESSAGE_FORMAT = '[%(levelname)s]:%(asctime)s %(message)s'
@@ -17,3 +19,5 @@ CRITERIAS = {
         'fps': 30
     }
 }
+
+STOP_FILE = Path('/app/stop.lock')

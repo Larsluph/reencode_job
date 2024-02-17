@@ -7,7 +7,7 @@ from signal import signal, SIGINT, SIGTERM
 from sys import stdout
 
 from app import App
-from config import LOG_LOCATION, LOG_DATE_FORMAT, LOG_MESSAGE_FORMAT
+from config import LOG_LOCATION, LOG_DATE_FORMAT, LOG_MESSAGE_FORMAT, STOP_FILE
 from worker import Worker
 
 
@@ -48,4 +48,7 @@ if __name__ == '__main__':
     for i, input_filename in enumerate(app.files, start=1):
         worker = Worker(app, i, input_filename)
         if not worker.work():
+            break
+        if STOP_FILE.exists():
+            logger.info('Stop file found, exiting...')
             break
