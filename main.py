@@ -14,6 +14,8 @@ from worker import Worker
 if __name__ == '__main__':
     parser = ArgumentParser(description="Video re-encoder with ffmpeg")
     parser.add_argument('path', type=Path, help='path to video content')
+    parser.add_argument('-f', '--filelist', action='store_true',
+                        help='path is a file with a list of files to process')
     parser.add_argument('-d', '--dry-run', action='store_true',
                         help='perform a trial run without changes made')
     parser.add_argument('-rm', '--remove', action='store_true',
@@ -42,8 +44,8 @@ if __name__ == '__main__':
 
     app.init_job()
 
-    signal(SIGINT, app.handler)
-    signal(SIGTERM, app.handler)
+    signal(SIGINT, app.signal_handler)
+    signal(SIGTERM, app.signal_handler)
 
     for i, input_filename in enumerate(app.files, start=1):
         worker = Worker(app, i, input_filename)
