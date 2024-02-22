@@ -59,26 +59,24 @@ class Worker:
             logger.info('Video matches expectations, skipping')
             return True
 
-        if self.app.is_dry_run_enabled:
-            return True
+        if not self.app.is_dry_run_enabled:
+            with Popen(cmd, stdout=PIPE, stderr=STDOUT, universal_newlines=True) as process:
+                for line in process.stdout:
+                    logger.debug(line.rstrip())
+                    if self.app.is_interrupted:
+                        process.terminate()
 
-        with Popen(cmd, stdout=PIPE, stderr=STDOUT, universal_newlines=True) as process:
-            for line in process.stdout:
-                logger.debug(line.rstrip())
-                if self.app.is_interrupted:
-                    process.terminate()
+                if process.wait() != 0:
+                    logger.error('Failed to process "%s": return code was %d',
+                                self.input_filename, process.returncode)
+                    if self.app.is_clean_on_error_enabled:
+                        logger.info('Removing failed "%s"', output_filename)
+                        output_filename.unlink()
 
-            if process.wait() != 0:
-                logger.error('Failed to process "%s": return code was %d',
-                            self.input_filename, process.returncode)
-                if self.app.is_clean_on_error_enabled:
-                    logger.info('Removing failed "%s"', output_filename)
-                    output_filename.unlink()
-
-                if self.app.is_interrupted:
-                    logger.info('Interrupted')
-                    return False
-                return True
+                    if self.app.is_interrupted:
+                        logger.info('Interrupted')
+                        return False
+                    return True
 
             in_size = file_metadata.file_size
             out_size = output_filename.stat().st_size
@@ -87,15 +85,17 @@ class Worker:
                         format_bytes(in_size), format_bytes(out_size),
                         calc_ratio(in_size, out_size), format_bytes(in_size - out_size))
 
-            if self.app.is_replace_enabled:
-                logger.info('Replacing "%s"', self.input_filename)
-                # Replace the original file but keep the new extension
-                new_name = Path(self.input_filename).with_suffix(output_filename.suffix)
+        if self.app.is_replace_enabled:
+            logger.info('Replacing "%s"', self.input_filename)
+            # Replace the original file but keep the new extension
+            new_name = Path(self.input_filename).with_suffix(output_filename.suffix)
+            if not self.app.is_dry_run_enabled:
                 rename(output_filename, new_name)
                 if self.input_filename != new_name:
                     self.input_filename.unlink()
-            elif self.app.is_remove_enabled:
-                logger.info('Removing "%s"', self.input_filename)
-                # Remove the original file
+        elif self.app.is_remove_enabled:
+            logger.info('Removing "%s"', self.input_filename)
+            # Remove the original file
+            if not self.app.is_dry_run_enabled:
                 self.input_filename.unlink()
         return True
