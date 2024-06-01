@@ -1,5 +1,5 @@
 import logging
-from os import rename
+from os import rename, makedirs
 from pathlib import Path
 from subprocess import Popen, PIPE, TimeoutExpired
 
@@ -33,12 +33,11 @@ class Worker:
     output_filename: Path
     process: Popen = None
 
-    def __init__(self, app: App, i: int, input_filename: Path):
+    def __init__(self, app: App, i: int, input_filename: Path, output_filename: Path):
         self.app = app
         self.i = i
         self.input_filename = input_filename
-        self.output_filename = Path(self.input_filename.parent,
-                               f"{self.input_filename.stem}_reencoded.mp4")
+        self.output_filename = output_filename
 
     def work(self) -> bool:
         logger.info('[%d/%d] Processing "%s"', self.i, len(self.app.files), self.input_filename)
@@ -52,6 +51,8 @@ class Worker:
         if self.output_filename.exists():
             logger.warning('Output file "%s" already exists, skipping', self.output_filename)
             return True
+        elif not (parent := self.output_filename.parent).exists():
+            makedirs(parent)
         cmd = generate_ffmpeg_command(self.input_filename,
                                       self.output_filename,
                                       file_metadata,
