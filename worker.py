@@ -70,13 +70,13 @@ class Worker:
 
         if not self.app.is_dry_run_enabled:
             with Popen(cmd, stdout=PIPE, stderr=PIPE, universal_newlines=True) as self.process:
-                while not self.app.is_interrupted and self.process.poll() is not None:
+                while not self.app.is_interrupted and self.process.poll() is None:
                     try:
                         outs, errs = self.process.communicate(timeout=1)
-                        for line in outs.split():
-                            logger.debug(line.rstrip())
-                        for line in errs.split():
-                            logger.error(line.rstrip())
+                        for line in outs.splitlines():
+                            logger.debug("[FFMPEG] %s", line.rstrip())
+                        for line in errs.splitlines():
+                            logger.error("[FFMPEG] %s", line.rstrip())
                     except TimeoutExpired:
                         pass
 
