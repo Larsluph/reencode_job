@@ -16,6 +16,7 @@ class App:
     is_dry_run_enabled: bool
     is_remove_enabled: bool
     is_replace_enabled: bool
+    is_overwrite_enabled: bool
     is_clean_on_error_enabled: bool
     is_filelist_enabled: bool
 
@@ -31,6 +32,7 @@ class App:
         self.is_dry_run_enabled = args.dry_run
         self.is_remove_enabled = args.remove
         self.is_replace_enabled = args.replace
+        self.is_overwrite_enabled = args.overwrite
         self.is_clean_on_error_enabled = args.clean_on_error
         self.is_filelist_enabled = args.filelist
         self.is_interrupted = False

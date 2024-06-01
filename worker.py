@@ -48,7 +48,9 @@ class Worker:
             return True
 
         errors = check_file(file_metadata)
-        if self.output_filename.exists():
+        if self.output_filename.exists() and self.app.is_overwrite_enabled:
+            logger.info('Overwriting "%s"', self.output_filename)
+        elif self.output_filename.exists():
             logger.warning('Output file "%s" already exists, skipping', self.output_filename)
             return True
         elif not (parent := self.output_filename.parent).exists():
