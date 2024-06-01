@@ -13,19 +13,24 @@ This project aims at providing an automated way to reencode video based on stati
   - FPS
 
 ```txt
-usage: main.py [-h] [-d] [-rm] [--replace] [--clean-on-error] path
+usage: main.py [-h] [-o OUTPUT] [--overwrite] [--filter FILTER] [-f] [-d] [-rm] [--replace] [--clean-on-error] path
 
 Video re-encoder with ffmpeg
 
 positional arguments:
-  path              path to video content
+  path                  path to video content
 
 options:
-  -h, --help        show this help message and exit
-  -d, --dry-run     perform a trial run without changes made
-  -rm, --remove     remove original content after processing
-  --replace         replace original content with the processed one
-  --clean-on-error  remove processed content if an error occurs
+  -h, --help            show this help message and exit
+  -o OUTPUT, --output OUTPUT
+                        path to output content
+  --overwrite           Replace output if it already exists
+  --filter FILTER       glob pattern to filter input files to process
+  -f, --filelist        path is a file with a list of files to process, if OUTPUT is specified the file list should be composed of alternating lines of input and output filenames
+  -d, --dry-run         perform a trial run without changes made
+  -rm, --remove         remove original content after processing
+  --replace             replace original content with the processed one
+  --clean-on-error      remove processed content if an error occurs
 ```
 
 ## Requirements

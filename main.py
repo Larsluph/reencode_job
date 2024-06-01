@@ -19,7 +19,9 @@ if __name__ == '__main__':
                         help='Replace output if it already exists')
     parser.add_argument('--filter', help='glob pattern to filter input files to process')
     parser.add_argument('-f', '--filelist', action='store_true',
-                        help='path is a file with a list of files to process')
+                        help='path is a file with a list of files to process, '
+                        'if OUTPUT is specified the file list should be composed of '
+                        'alternating lines of input and output filenames')
     parser.add_argument('-d', '--dry-run', action='store_true',
                         help='perform a trial run without changes made')
     parser.add_argument('-rm', '--remove', action='store_true',
