@@ -1,5 +1,5 @@
 from enum import Flag, auto
-from os.path import splitext
+from pathlib import Path
 
 from fileparser import FileMetadata
 from config import EXT_WHITELIST, CRITERIAS
@@ -26,9 +26,9 @@ class FileCheckError(Flag):
     ANY = ANY_AUDIO | ANY_VIDEO
 
 
-def check_file_ext(file_path: str) -> bool:
+def check_file_ext(file_path: Path) -> bool:
     """Check if the file extension is in the whitelist"""
-    ext = splitext(file_path)[1]
+    ext = file_path.suffix
     return ext in EXT_WHITELIST, ext
 
 

@@ -17,6 +17,7 @@ if __name__ == '__main__':
     parser.add_argument('-o', '--output', type=Path, help='path to output content')
     parser.add_argument('--overwrite', action='store_true',
                         help='Replace output if it already exists')
+    parser.add_argument('--filter', help='glob pattern to filter input files to process')
     parser.add_argument('-f', '--filelist', action='store_true',
                         help='path is a file with a list of files to process')
     parser.add_argument('-d', '--dry-run', action='store_true',
