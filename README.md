@@ -56,22 +56,21 @@ python3 main.py [-h] [-d] [-rm] [--replace] [--clean-on-error] path
 
 ### Using docker
 
-You'll need a docker image with python 3.12 and ffmpeg installed.
-
-For practical reasons, a Dockerfile is available to build such image:
-
 ```sh
-docker build -t python-ffmpeg .
+docker pull ghcr.io/larsluph/reencode_job
 ```
 
-Once you have a valid docker image (either the one built or another with both requirements fulfilled), you can run the project.
+Make sure to use valid volume mounts to run the job:
 
-Make sure to update both volume mounts to match your environment:
+| Volume mount     | Description                    |
+|------------------|--------------------------------|
+| `/app/config.py` | Project configuration override |
+| `/app/logs`      | Logs directory (by default)    |
+| `/app/lock`      | Locks directory (by default)   |
 
-| Volume mount | Description         |
-|--------------|---------------------|
-| `/app`       | Project source code |
-| `/data`      | Videos directory    |
+All default paths can be changed in the configuration override.
+
+Don't forget to also mount your data directory containing every files you want to run the job on.
 
 #### Docker run command
 
@@ -79,24 +78,20 @@ Make sure to update both volume mounts to match your environment:
 docker run\
  --privileged\
  --name reencode_job\
- -v "/home/larsluph/reencode_job:/app"\
  -v "/home/larsluph/videos:/data"\
- python-ffmpeg\
- python3 /app/main.py /data
+ ghcr.io/larsluph/reencode_job\
+ /data
 ```
 
 #### Docker compose file
 
 ```yml
-version: '3.8'
 services:
   reencode_job:
-    image: python-ffmpeg
+    image: ghcr.io/larsluph/reencode_job
     container_name: reencode_job
     privileged: true
     volumes:
-      - /home/larsluph/reencode_job:/app
       - /home/larsluph/videos:/data
-    command: ['python3', '/app/main.py', '/data']
-
+    command: ['/data']
 ```

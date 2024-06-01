@@ -1,10 +1,10 @@
-version: '3.8'
 services:
   reencode_job:
-    image: python-ffmpeg
+    image: ghcr.io/larsluph/reencode_job
     container_name: reencode_job
     privileged: true
     volumes:
-      - /home/larsluph/reencode_job:/app
-      - /home/larsluph/videos:/data
-    command: ['python3', '/app/main.py', '/data']
+    - "/home/larsluph/reencode_job/logs:/app/logs"
+    - "/home/larsluph/reencode_job/lock:/app/lock"
+    - "/home/larsluph/videos:/data"
+    command: ['/data']

@@ -20,4 +20,4 @@ CRITERIAS = {
     }
 }
 
-STOP_FILE = Path('/app/stop.lock')
+STOP_FILE = Path('/app/lock/stop.lock')
