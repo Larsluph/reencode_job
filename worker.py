@@ -48,7 +48,7 @@ class Worker:
             return True
 
         errors = check_file(file_metadata)
-        if self.output_filename.exists() and self.app.is_overwrite_enabled:
+        if self.output_filename.exists() and self.app.args.is_overwrite_enabled:
             logger.info('Overwriting "%s"', self.output_filename)
         elif self.output_filename.exists():
             logger.warning('Output file "%s" already exists, skipping', self.output_filename)
@@ -68,7 +68,7 @@ class Worker:
             logger.info('Video matches expectations, skipping')
             return True
 
-        if not self.app.is_dry_run_enabled:
+        if not self.app.args.is_dry_run_enabled:
             with Popen(cmd, stdout=PIPE, stderr=PIPE, universal_newlines=True) as self.process:
                 while not self.app.is_interrupted and self.process.poll() is None:
                     try:
@@ -86,7 +86,7 @@ class Worker:
                 if self.process.wait() != 0:
                     logger.error('Failed to process "%s": return code was %d',
                                 self.input_filename, self.process.returncode)
-                    if self.app.is_clean_on_error_enabled:
+                    if self.app.args.is_clean_on_error_enabled:
                         logger.info('Removing failed "%s"', self.output_filename)
                         self.output_filename.unlink()
 
@@ -111,16 +111,16 @@ class Worker:
         return None
 
     def _cleanup(self):
-        if self.app.is_replace_enabled:
+        if self.app.args.is_replace_enabled:
             logger.info('Replacing "%s"', self.input_filename)
             # Replace the original file but keep the new extension
             new_name = Path(self.input_filename).with_suffix(self.output_filename.suffix)
-            if not self.app.is_dry_run_enabled:
+            if not self.app.args.is_dry_run_enabled:
                 rename(self.output_filename, new_name)
                 if self.input_filename != new_name:
                     self.input_filename.unlink()
-        elif self.app.is_remove_enabled:
+        elif self.app.args.is_remove_enabled:
             logger.info('Removing "%s"', self.input_filename)
             # Remove the original file
-            if not self.app.is_dry_run_enabled:
+            if not self.app.args.is_dry_run_enabled:
                 self.input_filename.unlink()

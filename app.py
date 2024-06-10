@@ -2,6 +2,7 @@ import logging
 import sys
 from argparse import Namespace
 from collections import Counter
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
 from io import TextIOWrapper
@@ -11,7 +12,9 @@ from filechecker import check_file_ext
 logger = logging.getLogger('reencode_job.app')
 
 
-class App:
+@dataclass
+class Args:
+    "App arguments parsed by argparse"
     content_path: Path
     output_path: Optional[Path]
     is_dry_run_enabled: bool
@@ -21,6 +24,11 @@ class App:
     is_clean_on_error_enabled: bool
     is_filelist_enabled: bool
 
+
+class App:
+    "App class contains all appdata necessary for the job"
+    args: Args
+
     is_interrupted: bool
     glob_filter: Optional[str]
     files: list[Path]
@@ -29,15 +37,16 @@ class App:
     def __init__(self, args: Namespace):
         logger.info('Starting new job with params: %s', args)
 
-        self.content_path = args.path
-        self.output_path = args.output
+        self.args = Args(args.path,
+                         args.output,
+                         args.dry_run,
+                         args.remove,
+                         args.replace,
+                         args.overwrite,
+                         args.clean_on_error,
+                         args.filelist)
+
         self.glob_filter = args.filter
-        self.is_dry_run_enabled = args.dry_run
-        self.is_remove_enabled = args.remove
-        self.is_replace_enabled = args.replace
-        self.is_overwrite_enabled = args.overwrite
-        self.is_clean_on_error_enabled = args.clean_on_error
-        self.is_filelist_enabled = args.filelist
         self.is_interrupted = False
         self.files = []
         self.outs = []
@@ -53,22 +62,22 @@ class App:
                                       ext_summary.most_common())))
 
     def _scan_file(self):
-        is_valid, ext = check_file_ext(self.content_path)
+        is_valid, ext = check_file_ext(self.args.content_path)
         if not is_valid:
             logger.error('Extension "%s" not in whitelist', ext)
             sys.exit(3)
 
-        self.files.append(self.content_path)
-        if self.output_path:
-            self.outs.append(self.output_path)
+        self.files.append(self.args.content_path)
+        if self.args.output_path:
+            self.outs.append(self.args.output_path)
         else:
-            self.outs.append(Path(self.content_path.parent,
-                                  f"{self.content_path.stem}_reencoded.mp4"))
+            self.outs.append(Path(self.args.content_path.parent,
+                                  f"{self.args.content_path.stem}_reencoded.mp4"))
 
     def _scan_filelist(self):
         ext_summary = Counter()
-        with self.content_path.open() as filelist:
-            if self.output_path:
+        with self.args.content_path.open(encoding='ascii') as filelist:
+            if self.args.output_path:
                 self.__scan_filelist_inout(filelist, ext_summary)
             else:
                 self.__scan_filelist_in(filelist, ext_summary)
@@ -118,7 +127,8 @@ class App:
     def __scan_glob(self):
         files_count: int = 0
         ext_summary = Counter()
-        for filename in self.content_path.glob(self.glob_filter):
+        logger.debug("Discovering files")
+        for filename in self.args.content_path.glob(self.glob_filter):
             files_count += 1
             if not self._process_file(filename):
                 ext_summary.update((filename.suffix,))
@@ -130,7 +140,7 @@ class App:
         files_count: int = 0
         ext_summary = Counter()
 
-        for root, _, filenames in self.content_path.walk():
+        for root, _, filenames in self.args.content_path.walk():
             directories_count += 1
             files_count += len(filenames)
             for filename in filenames:
@@ -142,28 +152,30 @@ class App:
 
     def _process_file(self, filename: Path):
         is_valid, _ = check_file_ext(filename)
-        if is_valid:
-            self.files.append(filename)
-            if self.output_path:
-                self.outs.append(
-                            self.output_path /
-                            filename.relative_to(self.content_path)
-                        )
-            else:
-                self.outs.append(Path(filename.parent,
-                                      f"{filename.stem}_reencoded.mp4"))
-        return is_valid
+        if not is_valid:
+            return False
+
+        self.files.append(filename)
+        if self.args.output_path:
+            self.outs.append(
+                self.args.output_path /
+                filename.relative_to(self.args.content_path)
+            )
+        else:
+            self.outs.append(Path(filename.parent,
+                                  f"{filename.stem}_reencoded.mp4"))
+        return True
 
     def init_job(self):
         # Check if dry run flag is set
-        if self.is_dry_run_enabled:
+        if self.args.is_dry_run_enabled:
             logger.info("Dry run enabled")
 
         self.files.clear()
 
-        if self.content_path.is_file() and self.is_filelist_enabled:
+        if self.args.content_path.is_file() and self.args.is_filelist_enabled:
             self._scan_filelist()
-        elif self.content_path.is_file():
+        elif self.args.content_path.is_file():
             self._scan_file()
         else:
             self._scan_directory()
