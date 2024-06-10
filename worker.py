@@ -12,7 +12,7 @@ from fileparser import probe_file
 logger = logging.getLogger('reencode_job.worker')
 
 
-def format_bytes(num, suffix="B"):
+def format_bytes(num: int, suffix: str = "B"):
     for unit in ("", "Ki", "Mi", "Gi", "Ti", "Pi", "Ei", "Zi"):
         if abs(num) < 1024.0:
             return f"{num:3.2f} {unit}{suffix}"

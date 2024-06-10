@@ -6,10 +6,10 @@ from fileparser import AudioMetadata, FileMetadata, VideoMetadata
 
 
 def check_flag_none(errors: FileCheckError, flag: FileCheckError):
-    return ~errors & flag == flag
+    return (~errors & flag) == flag
 
 def check_flag_any(errors: FileCheckError, flag: FileCheckError):
-    return errors & flag != 0
+    return (errors & flag) != FileCheckError.NONE
 
 def generate_audio_params(metadata: AudioMetadata, errors: FileCheckError):
     params = []
@@ -73,7 +73,7 @@ def generate_ffmpeg_command(input_file: Path,
                             errors: FileCheckError):
     params = []
 
-    if check_flag_none(errors, FileCheckError.ANY):
+    if errors == FileCheckError.NONE:
         params.extend(('-c', 'copy'))
     else:
         # Audio errors
