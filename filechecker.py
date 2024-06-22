@@ -26,7 +26,7 @@ class FileCheckError(Flag):
     ANY = ANY_AUDIO | ANY_VIDEO
 
 
-def check_file_ext(file_path: Path) -> bool:
+def check_file_ext(file_path: Path) -> tuple[bool, str]:
     """Check if the file extension is in the whitelist"""
     ext = file_path.suffix
     return ext in EXT_WHITELIST, ext

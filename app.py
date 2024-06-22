@@ -4,7 +4,7 @@ from argparse import Namespace
 from collections import Counter
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
+from typing import Optional, TextIO
 from io import TextIOWrapper
 
 from filechecker import check_file_ext
@@ -84,7 +84,7 @@ class App:
 
         self._log_ext_summary(ext_summary)
 
-    def __scan_filelist_in(self, filelist: TextIOWrapper, ext_summary: Counter):
+    def __scan_filelist_in(self, filelist: TextIO, ext_summary: Counter):
         for line in filelist:
             file_path = Path(line.strip())
             if not file_path.exists():
@@ -99,7 +99,7 @@ class App:
             else:
                 ext_summary.update((ext,))
 
-    def __scan_filelist_inout(self, filelist: TextIOWrapper, ext_summary: Counter):
+    def __scan_filelist_inout(self, filelist: TextIO, ext_summary: Counter):
         for i, line in enumerate(filelist):
             file_path = Path(line.strip())
 
@@ -144,8 +144,9 @@ class App:
             directories_count += 1
             files_count += len(filenames)
             for filename in filenames:
-                if not self._process_file(Path(root, filename)):
-                    ext_summary.update((filename.suffix,))
+                fname = Path(root, filename)
+                if not self._process_file(fname):
+                    ext_summary.update((fname.suffix,))
             logger.debug('Scanned %s directories and %s files',
                          directories_count, files_count)
         self._log_ext_summary(ext_summary)

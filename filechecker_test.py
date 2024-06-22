@@ -1,8 +1,9 @@
-from unittest import TestCase
 from pathlib import Path
+from unittest import TestCase
 
 from filechecker import check_file_ext, check_file, FileCheckError
 from fileparser import FileMetadata, AudioMetadata, VideoMetadata
+
 
 class FileCheckerTest(TestCase):
     metadata = None
