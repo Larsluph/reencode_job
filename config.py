@@ -11,7 +11,10 @@ CRITERIAS = {
         'codec': 'aac',
         'sample_rate': 48_000,
         'channels': 2,
-        'bitrate': (192_000, 200_000)
+        'bitrate': {
+            'target': 192_000,
+            'threshold': 200_000
+        }
     },
     'video': {
         'codec': 'hevc',

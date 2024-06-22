@@ -48,7 +48,7 @@ def check_file(metadata: FileMetadata) -> FileCheckError:
     if CRITERIAS['audio']['channels'] and audio.channels > CRITERIAS['audio']['channels']:
         errors |= FileCheckError.AUDIO_CHANNELS
 
-    if CRITERIAS['audio']['bitrate'] and audio.bitrate > CRITERIAS['audio']['bitrate'][1]:
+    if CRITERIAS['audio']['bitrate'] and audio.bitrate > CRITERIAS['audio']['bitrate']['threshold']:
         errors |= FileCheckError.AUDIO_BITRATE
 
     ### Check video
