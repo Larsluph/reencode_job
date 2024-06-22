@@ -1,3 +1,4 @@
+from pathlib import Path
 from unittest import TestCase
 from unittest.mock import patch
 
@@ -8,7 +9,7 @@ from fileparser import FileMetadata, AudioMetadata, VideoMetadata
 
 class TestCommandGenerator(TestCase):
     metadata = FileMetadata(
-        "input_path",
+        Path("input_path"),
         123,
         30.0,
         AudioMetadata("aac", 48_000, 2, 256_000, {}),
@@ -38,8 +39,8 @@ class TestCommandGenerator(TestCase):
 
     def test_generate_ffmpeg_command_returns_copy(self):
         with patch('command_generator.generate_tag_params'):
-            result = generate_ffmpeg_command("input_path",
-                                             "output_path",
+            result = generate_ffmpeg_command(Path("input_path"),
+                                             Path("output_path"),
                                              self.metadata,
                                              FileCheckError.NONE)
             self.assertEqual(result, ['ffmpeg', '-hide_banner', '-y',
@@ -49,8 +50,8 @@ class TestCommandGenerator(TestCase):
 
     def test_generate_ffmpeg_command_returns_audio_with_vcopy(self):
         with patch('command_generator.generate_tag_params'):
-            result = generate_ffmpeg_command("input_path",
-                                             "output_path",
+            result = generate_ffmpeg_command(Path("input_path"),
+                                             Path("output_path"),
                                              self.metadata,
                                              FileCheckError.AUDIO_BITRATE)
             self.assertEqual(result, ['ffmpeg', '-hide_banner', '-y',
@@ -63,7 +64,7 @@ class TestCommandGenerator(TestCase):
     def test_generate_ffmpeg_command_returns_video_with_acopy(self):
         with patch('command_generator.generate_tag_params'):
             result = generate_ffmpeg_command(
-                "input_path", "output_path", self.metadata, FileCheckError.VIDEO_RESOLUTION)
+                Path("input_path"), Path("output_path"), self.metadata, FileCheckError.VIDEO_RESOLUTION)
             self.assertEqual(result, ['ffmpeg', '-hide_banner', '-y',
                                       '-i', 'input_path',
                                       '-c:a', 'copy',

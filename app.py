@@ -5,7 +5,6 @@ from collections import Counter
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional, TextIO
-from io import TextIOWrapper
 
 from filechecker import check_file_ext
 
@@ -14,7 +13,7 @@ logger = logging.getLogger('reencode_job.app')
 
 @dataclass
 class Args:
-    "App arguments parsed by argparse"
+    """App arguments parsed by argparse"""
     content_path: Path
     output_path: Optional[Path]
     is_dry_run_enabled: bool
@@ -26,7 +25,7 @@ class Args:
 
 
 class App:
-    "App class contains all appdata necessary for the job"
+    """App class contains all appdata necessary for the job"""
     args: Args
 
     is_interrupted: bool
@@ -55,7 +54,8 @@ class App:
         self.is_interrupted = True
         logger.warning('Interrupted by signal %d', signum)
 
-    def _log_ext_summary(self, ext_summary: Counter):
+    @staticmethod
+    def _log_ext_summary(ext_summary: Counter):
         if ext_summary:
             logger.info('Skipped extensions:\n%s',
                         '\n'.join(map(lambda x: f'{x[0]} -> {x[1]}',

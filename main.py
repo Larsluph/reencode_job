@@ -10,7 +10,6 @@ from app import App
 from config import LOG_LOCATION, LOG_DATE_FORMAT, LOG_MESSAGE_FORMAT, STOP_FILE
 from worker import Worker
 
-
 if __name__ == '__main__':
     parser = ArgumentParser(description="Video re-encoder with ffmpeg")
     parser.add_argument('path', type=Path, help='path to video content')
@@ -20,8 +19,8 @@ if __name__ == '__main__':
     parser.add_argument('--filter', help='glob pattern to filter input files to process')
     parser.add_argument('-f', '--filelist', action='store_true',
                         help='path is a file with a list of files to process, '
-                        'if OUTPUT is specified the file list should be composed of '
-                        'alternating lines of input and output filenames')
+                             'if OUTPUT is specified the file list should be composed of '
+                             'alternating lines of input and output filenames')
     parser.add_argument('-d', '--dry-run', action='store_true',
                         help='perform a trial run without changes made')
     parser.add_argument('-rm', '--remove', action='store_true',
@@ -35,7 +34,7 @@ if __name__ == '__main__':
     formatter = logging.Formatter(LOG_MESSAGE_FORMAT)
 
     fh = logging.FileHandler(join(LOG_LOCATION,
-                                datetime.now().strftime(LOG_DATE_FORMAT)))
+                                  datetime.now().strftime(LOG_DATE_FORMAT)))
     fh.setLevel(logging.DEBUG)
     fh.setFormatter(formatter)
 

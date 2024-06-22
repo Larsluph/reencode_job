@@ -6,7 +6,6 @@ from pathlib import Path
 from subprocess import run, CalledProcessError
 from typing import Optional
 
-
 logger = logging.getLogger('reencode_job.fileparser')
 
 
@@ -22,7 +21,7 @@ class AudioMetadata:
 
 @dataclass
 class VideoMetadata:
-    "Stores video stream metadata"
+    """Stores video stream metadata"""
     codec: str
     width: int
     height: int
@@ -38,7 +37,7 @@ class VideoMetadata:
 
 @dataclass
 class FileMetadata:
-    "Stores video file metadata"
+    """Stores video file metadata"""
     # General
     filepath: Path
     file_size: int
@@ -64,11 +63,11 @@ def probe_file(file_path: Path) -> Optional[FileMetadata]:
     """Parse the ffprobe output and return a dictionary of the metadata"""
     try:
         result = run(['ffprobe', '-v', 'error', '-print_format', 'json',
-                     '-show_format', '-show_streams', str(file_path)],
-                    shell=False,
-                    capture_output=True,
-                    check=True,
-                    text=True)
+                      '-show_format', '-show_streams', str(file_path)],
+                     shell=False,
+                     capture_output=True,
+                     check=True,
+                     text=True)
     except CalledProcessError:
         logger.exception("Unable to probe file")
         return None
@@ -116,7 +115,7 @@ def probe_file(file_path: Path) -> Optional[FileMetadata]:
                             height=video_height,
                             aspect_ratio=calc_aspect_ratio(video_width, video_height),
                             frame_rate=parse_frame_rate(video_stream.get('r_frame_rate', '0/1')),
-                            bitrate=float(video_stream.get('bit_rate', 0)),
+                            bitrate=int(video_stream.get('bit_rate', 0)),
                             tags=video_stream.get('tags', {})),
         tags=format_stream.get('tags', {})
     )

@@ -19,7 +19,11 @@ CRITERIAS = {
     'video': {
         'codec': 'hevc',
         'resolution': (1920, 1080),
-        'fps': 30
+        'fps': 30,
+        'bitrate': {
+            'target': 2_000_000,
+            'threshold': 3_000_000
+        }
     }
 }
 

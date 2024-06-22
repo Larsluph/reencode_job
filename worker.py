@@ -9,13 +9,14 @@ from command_generator import generate_ffmpeg_command
 from filechecker import check_file
 from fileparser import probe_file
 
-
 logger = logging.getLogger('reencode_job.worker')
 
-def safe_log(num: int, base: int):
+
+def safe_log(num: float, base: int):
     if num == 0:
         return num
     return math.log(math.fabs(num), base)
+
 
 def format_float(num: float) -> str:
     digits = safe_log(num, 10)
@@ -103,7 +104,7 @@ class Worker:
 
                 if self.process.wait() != 0:
                     logger.error('Failed to process "%s": return code was %d',
-                                self.input_filename, self.process.returncode)
+                                 self.input_filename, self.process.returncode)
                     if self.app.args.is_clean_on_error_enabled:
                         logger.info('Removing failed "%s"', self.output_filename)
                         self.output_filename.unlink()

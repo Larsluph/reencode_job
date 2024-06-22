@@ -10,13 +10,13 @@ class FileCheckerTest(TestCase):
 
     def setUp(self):
         self.metadata = FileMetadata(
-        "input_path",
-        123,
-        30.0,
-        AudioMetadata("aac", 48_000, 2, 192_000, {}),
-        VideoMetadata("hevc", 1920, 1080, "16/9", 30.0, 8000, {}),
-        {}
-    )
+            Path("input_path"),
+            123,
+            30.0,
+            AudioMetadata("aac", 48_000, 2, 192_000, {}),
+            VideoMetadata("hevc", 1920, 1080, "16/9", 30.0, 8000, {}),
+            {}
+        )
 
     def test_check_file_ext_returns_false(self):
         res, ext = check_file_ext(Path("/file/test.txt"))
@@ -73,3 +73,8 @@ class FileCheckerTest(TestCase):
         self.metadata.video.frame_rate = 60
         result = check_file(self.metadata)
         self.assertEqual(result, FileCheckError.VIDEO_FPS)
+
+    def test_check_file_video_bitrate(self):
+        self.metadata.video.bitrate = 5_000_000
+        result = check_file(self.metadata)
+        self.assertEqual(result, FileCheckError.VIDEO_BITRATE)

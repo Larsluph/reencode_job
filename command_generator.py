@@ -8,8 +8,10 @@ from fileparser import AudioMetadata, FileMetadata, VideoMetadata
 def check_flag_none(errors: FileCheckError, flag: FileCheckError):
     return (~errors & flag) == flag
 
+
 def check_flag_any(errors: FileCheckError, flag: FileCheckError):
     return (errors & flag) != FileCheckError.NONE
+
 
 def generate_audio_params(metadata: AudioMetadata, errors: FileCheckError):
     params = []
@@ -29,6 +31,7 @@ def generate_audio_params(metadata: AudioMetadata, errors: FileCheckError):
 
     return params
 
+
 def generate_video_params(metadata: VideoMetadata, errors: FileCheckError):
     params = []
 
@@ -44,7 +47,11 @@ def generate_video_params(metadata: VideoMetadata, errors: FileCheckError):
     if errors & FileCheckError.VIDEO_FPS:
         params.extend(('-r', CRITERIAS['video']['fps']))
 
+    if errors & FileCheckError.VIDEO_BITRATE:
+        params.extend(('-b:v', CRITERIAS['video']['bitrate']['target']))
+
     return params
+
 
 def generate_tag_params(input_file: Path):
     params = []
@@ -66,6 +73,7 @@ def generate_tag_params(input_file: Path):
         ))
 
     return params
+
 
 def generate_ffmpeg_command(input_file: Path,
                             output_file: Path,
