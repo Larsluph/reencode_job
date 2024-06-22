@@ -1,4 +1,5 @@
 import logging
+import math
 from os import rename, makedirs
 from pathlib import Path
 from subprocess import Popen, PIPE, TimeoutExpired
@@ -11,13 +12,30 @@ from fileparser import probe_file
 
 logger = logging.getLogger('reencode_job.worker')
 
+def safe_log(num: int, base: int):
+    if num == 0:
+        return num
+    return math.log(math.fabs(num), base)
+
+def format_float(num: float) -> str:
+    digits = safe_log(num, 10)
+    if digits >= 2:
+        return str(int(num))
+
+    if digits >= 1:
+        return f"{num:0.1f}"
+
+    return f"{num:0.2f}"
+
 
 def format_bytes(num: int, suffix: str = "B"):
-    for unit in ("", "Ki", "Mi", "Gi", "Ti", "Pi", "Ei", "Zi"):
-        if abs(num) < 1024.0:
-            return f"{num:3.2f} {unit}{suffix}"
-        num /= 1024.0
-    return f"{num:.1f} Yi{suffix}"
+    units = ("", "Ki", "Mi", "Gi", "Ti", "Pi", "Ei", "Zi")
+    unit_index = int(safe_log(num, 1024))
+    value = num / pow(1024, unit_index)
+
+    if unit_index >= len(units):
+        return f"{format_float(value)} Yi{suffix}"
+    return f"{format_float(value)} {units[unit_index]}{suffix}"
 
 
 def calc_ratio(isize, osize):
