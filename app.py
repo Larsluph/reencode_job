@@ -15,13 +15,21 @@ logger = logging.getLogger('reencode_job.app')
 class Args:
     """App arguments parsed by argparse"""
     content_path: Path
+    """Represented by the path required positional parameter"""
     output_path: Optional[Path]
+    """Represented by the optional -o/--output parameter"""
     is_dry_run_enabled: bool
+    """Represented by the optional -d/--dry-run parameter"""
     is_remove_enabled: bool
+    """Represented by the optional -rm/--remove parameter"""
     is_replace_enabled: bool
+    """Represented by the optional --replace parameter"""
     is_overwrite_enabled: bool
+    """Represented by the optional --overwrite parameter"""
     is_clean_on_error_enabled: bool
+    """Represented by the optional --clean-on-error parameter"""
     is_filelist_enabled: bool
+    """Represented by the optional -f/--filelist parameter"""
 
 
 class App:

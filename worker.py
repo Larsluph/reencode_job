@@ -117,7 +117,7 @@ class Worker:
 
         return True
 
-    def _cleanup(self):
+    def cleanup(self):
         if self.app.args.is_replace_enabled:
             logger.info('Replacing "%s"', self.input_filename)
             # Replace the original file but keep the new extension
