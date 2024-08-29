@@ -2,7 +2,7 @@ import logging
 import math
 from os import rename, makedirs
 from pathlib import Path
-from subprocess import Popen, PIPE, TimeoutExpired
+from subprocess import Popen, PIPE, STDOUT
 
 from app import App
 from command_generator import generate_ffmpeg_command
@@ -88,25 +88,19 @@ class Worker:
             return True
 
         if not self.app.args.is_dry_run_enabled:
-            with Popen(cmd, stdout=PIPE, stderr=PIPE, universal_newlines=True) as self.process:
-                while not self.app.is_interrupted and self.process.poll() is None:
-                    try:
-                        outs, errs = self.process.communicate(timeout=1)
-                        for line in outs.splitlines():
-                            logger.debug("[FFMPEG] %s", line.rstrip())
-                        for line in errs.splitlines():
-                            logger.error("[FFMPEG] %s", line.rstrip())
-                    except TimeoutExpired:
-                        pass
-
+            with Popen(cmd, stdout=PIPE, stderr=STDOUT, universal_newlines=True) as ffmpeg:
+                while not self.app.is_interrupted and ffmpeg.poll() is None:
+                    for line in ffmpeg.stdout:
+                        logger.info("[FFMPEG] %s", line.rstrip())
                     if self.app.is_interrupted:
-                        self.process.terminate()
+                        logger.info("Sending termination signal to ffmpeg subprocess")
+                        ffmpeg.terminate()
 
-                if self.process.wait() != 0:
+                if ffmpeg.wait() != 0:
                     logger.error('Failed to process "%s": return code was %d',
-                                 self.input_filename, self.process.returncode)
+                                 self.input_filename, ffmpeg.returncode)
                     if self.app.args.is_clean_on_error_enabled:
-                        logger.info('Removing failed "%s"', self.output_filename)
+                        logger.info('Removing job leftover "%s"', self.output_filename)
                         self.output_filename.unlink()
 
                     if self.app.is_interrupted:
@@ -122,12 +116,6 @@ class Worker:
                         calc_ratio(in_size, out_size), format_bytes(in_size - out_size))
 
         return True
-
-    def terminate_job(self):
-        if self.process is not None:
-            self.process.terminate()
-            return self.process.poll()
-        return None
 
     def _cleanup(self):
         if self.app.args.is_replace_enabled:
