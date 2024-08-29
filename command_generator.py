@@ -36,7 +36,7 @@ def generate_video_params(metadata: VideoMetadata, errors: FileCheckError):
     params = []
 
     if check_flag_any(errors, FileCheckError.ANY_VIDEO):
-        video_codec = CRITERIAS['video']['codec']
+        video_codec = CRITERIAS['video']['codec_encoder']
         params.extend(('-c:v', video_codec if video_codec else metadata.codec))
 
     if errors & FileCheckError.VIDEO_RESOLUTION:
@@ -98,7 +98,7 @@ def generate_ffmpeg_command(input_file: Path,
 
     params.extend(generate_tag_params(input_file))
 
-    return list(map(str, ('ffmpeg', '-hide_banner', '-y',
+    return list(map(str, ('ffmpeg', '-hide_banner', '-y', '-hwaccel', 'cuda', '-hwaccel_output_format', 'cuda',
                           '-i', input_file,
                           *params,
                           output_file)))

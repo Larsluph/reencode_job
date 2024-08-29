@@ -18,6 +18,7 @@ CRITERIAS = {
     },
     'video': {
         'codec': 'hevc',
+        'codec_encoder': 'hevc_nvenc',
         'resolution': (1920, 1080),
         'fps': 30,
         'bitrate': {
