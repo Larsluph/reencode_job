@@ -91,7 +91,7 @@ class Worker:
             with Popen(cmd, stdout=PIPE, stderr=STDOUT, universal_newlines=True) as ffmpeg:
                 while not self.app.is_interrupted and ffmpeg.poll() is None:
                     for line in ffmpeg.stdout:
-                        logger.info("[FFMPEG] %s", line.rstrip())
+                        logger.debug("[FFMPEG] %s", line.rstrip())
                     if self.app.is_interrupted:
                         logger.info("Sending termination signal to ffmpeg subprocess")
                         ffmpeg.terminate()
