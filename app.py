@@ -180,4 +180,3 @@ class App:
             self._scan_file()
         else:
             self._scan_directory()
-            self.files.sort()
