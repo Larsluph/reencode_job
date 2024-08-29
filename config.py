@@ -4,7 +4,7 @@ LOG_LOCATION = '/app/logs'
 LOG_DATE_FORMAT = '%Y-%m-%d_%H-%M-%S.log'
 LOG_MESSAGE_FORMAT = '[%(levelname)s]:%(asctime)s %(message)s'
 
-EXT_WHITELIST = ['.avi', '.mp4', '.mov', '.mkv', '.wmv']
+EXT_WHITELIST = ['.avi', '.mp4', '.mov', '.mkv', '.m4v', '.wmv']
 
 CRITERIAS = {
     'audio': {
