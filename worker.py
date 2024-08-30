@@ -1,6 +1,6 @@
 import logging
 import math
-from os import rename, makedirs
+from os import makedirs, replace
 from pathlib import Path
 from subprocess import Popen, PIPE, STDOUT
 
@@ -125,7 +125,7 @@ class Worker:
             # Replace the original file but keep the new extension
             new_name = Path(self.input_filename).with_suffix(self.output_filename.suffix)
             if not self.app.args.is_dry_run_enabled:
-                rename(self.output_filename, new_name)
+                replace(self.output_filename, new_name)
                 if self.input_filename != new_name:
                     self.input_filename.unlink()
         elif self.app.args.is_remove_enabled:
