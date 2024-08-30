@@ -115,9 +115,11 @@ class Worker:
                         format_bytes(in_size), format_bytes(out_size),
                         calc_ratio(in_size, out_size), format_bytes(in_size - out_size))
 
+            self._cleanup()
+
         return True
 
-    def cleanup(self):
+    def _cleanup(self):
         if self.app.args.is_replace_enabled:
             logger.info('Replacing "%s"', self.input_filename)
             # Replace the original file but keep the new extension

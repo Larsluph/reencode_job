@@ -56,7 +56,6 @@ if __name__ == '__main__':
         worker = Worker(app, i, input_filename, output_filename)
         if not worker.work():
             break
-        worker.cleanup()
         if STOP_FILE.exists():
             logger.info('Stop file found, exiting...')
             break
