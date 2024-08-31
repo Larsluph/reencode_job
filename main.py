@@ -6,8 +6,8 @@ from pathlib import Path
 from signal import signal, SIGINT, SIGTERM
 from sys import stdout
 
+import colorized_logger
 from app import App
-from colorized_logger import ColoredFormatter
 from config import LOG_LOCATION, LOG_DATE_FORMAT, LOG_MESSAGE_FORMAT, STOP_FILE
 from worker import Worker
 
@@ -41,12 +41,19 @@ if __name__ == '__main__':
 
     ch = logging.StreamHandler(stdout)
     ch.setLevel(logging.INFO)
-    ch.setFormatter(ColoredFormatter(LOG_MESSAGE_FORMAT))
+    ch.setFormatter(colorized_logger.ColoredFormatter(LOG_MESSAGE_FORMAT))
 
     logger = logging.getLogger('reencode_job')
     logger.setLevel(logging.DEBUG)
     logger.addHandler(fh)
     logger.addHandler(ch)
+
+    def add_log_level(lvl): return logging.addLevelName(getattr(colorized_logger, lvl), lvl)
+    add_log_level('PROGRESS')
+    add_log_level('SKIP')
+    add_log_level('DESTRUCTIVE')
+    add_log_level('STOP')
+    add_log_level('ROLLBACK')
 
     app.init_job()
 
@@ -58,5 +65,5 @@ if __name__ == '__main__':
         if not worker.work():
             break
         if STOP_FILE.exists():
-            logger.info('Stop file found, exiting...')
+            logger.log(colorized_logger.STOP, 'Stop file found, exiting...')
             break

@@ -6,6 +6,8 @@ from pathlib import Path
 from subprocess import run, CalledProcessError
 from typing import Optional
 
+from colorized_logger import SKIP
+
 logger = logging.getLogger('reencode_job.fileparser')
 
 
@@ -84,7 +86,7 @@ def probe_file(file_path: Path) -> Optional[FileMetadata]:
             video_stream = stream
             break
     else:
-        logger.error("No video stream found")
+        logger.log(SKIP, "No video stream found")
         return None
 
     # Detect audio stream
@@ -93,7 +95,7 @@ def probe_file(file_path: Path) -> Optional[FileMetadata]:
             audio_stream = stream
             break
     else:
-        logger.error("No audio stream found")
+        logger.log(SKIP, "No audio stream found")
         return None
 
     video_width: int = video_stream['width']

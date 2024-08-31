@@ -5,6 +5,7 @@ from pathlib import Path
 from subprocess import Popen, PIPE, STDOUT
 
 from app import App
+from colorized_logger import PROGRESS, SKIP, DESTRUCTIVE, ROLLBACK
 from command_generator import generate_ffmpeg_command
 from filechecker import check_file
 from fileparser import probe_file
@@ -59,18 +60,18 @@ class Worker:
         self.output_filename = output_filename
 
     def work(self) -> bool:
-        logger.info('[%d/%d] Processing "%s"', self.i, len(self.app.files), self.input_filename)
+        logger.log(PROGRESS, '[%d/%d] Processing "%s"', self.i, len(self.app.files), self.input_filename)
 
         file_metadata = probe_file(self.input_filename)
         if file_metadata is None:
-            logger.info('Skipping')
+            logger.log(SKIP, 'Skipping')
             return True
 
         errors = check_file(file_metadata)
         if self.output_filename.exists() and self.app.args.is_overwrite_enabled:
-            logger.info('Overwriting "%s"', self.output_filename)
+            logger.log(DESTRUCTIVE, 'Overwriting "%s"', self.output_filename)
         elif self.output_filename.exists():
-            logger.warning('Output file "%s" already exists, skipping', self.output_filename)
+            logger.log(SKIP, 'Output file "%s" already exists, skipping', self.output_filename)
             return True
         elif not (parent := self.output_filename.parent).exists():
             makedirs(parent)
@@ -84,7 +85,7 @@ class Worker:
         logger.debug(cmd)
 
         if not errors:
-            logger.info('Video matches expectations, skipping')
+            logger.log(SKIP, 'Video matches expectations, skipping')
             return True
 
         if not self.app.args.is_dry_run_enabled:
@@ -100,11 +101,11 @@ class Worker:
                     logger.error('Failed to process "%s": return code was %d',
                                  self.input_filename, ffmpeg.returncode)
                     if self.app.args.is_clean_on_error_enabled:
-                        logger.info('Removing job leftover "%s"', self.output_filename)
+                        logger.log(ROLLBACK, 'Removing job leftover "%s"', self.output_filename)
                         self.output_filename.unlink()
 
                     if self.app.is_interrupted:
-                        logger.info('Interrupted')
+                        logger.log(SKIP, 'Interrupted')
                         return False
                     return True
 
@@ -121,16 +122,16 @@ class Worker:
 
     def _cleanup(self):
         if self.app.args.is_replace_enabled:
-            logger.info('Replacing "%s"', self.input_filename)
+            logger.log(DESTRUCTIVE, 'Replacing "%s"', self.input_filename)
             # Replace the original file but keep the new extension
             new_name = Path(self.input_filename).with_suffix(self.output_filename.suffix)
             if not self.app.args.is_dry_run_enabled:
                 replace(self.output_filename, new_name)
                 if self.input_filename != new_name:
-                    logger.info('Extension has changed, removing original file')
+                    logger.log(DESTRUCTIVE, 'Extension has changed, removing original file')
                     self.input_filename.unlink()
         elif self.app.args.is_remove_enabled:
-            logger.info('Removing "%s"', self.input_filename)
+            logger.log(DESTRUCTIVE, 'Removing "%s"', self.input_filename)
             # Remove the original file
             if not self.app.args.is_dry_run_enabled:
                 self.input_filename.unlink()
