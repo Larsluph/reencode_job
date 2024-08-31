@@ -127,6 +127,7 @@ class Worker:
             if not self.app.args.is_dry_run_enabled:
                 replace(self.output_filename, new_name)
                 if self.input_filename != new_name:
+                    logger.info('Extension has changed, removing original file')
                     self.input_filename.unlink()
         elif self.app.args.is_remove_enabled:
             logger.info('Removing "%s"', self.input_filename)
