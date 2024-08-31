@@ -1,8 +1,14 @@
 import logging
 import math
+import re
+from datetime import timedelta
 from os import makedirs, replace
 from pathlib import Path
 from subprocess import Popen, PIPE, STDOUT
+from typing import Optional
+
+from tqdm import tqdm
+from tqdm.contrib.logging import logging_redirect_tqdm
 
 from app import App
 from colorized_logger import PROGRESS, SKIP, DESTRUCTIVE, ROLLBACK
@@ -11,6 +17,8 @@ from filechecker import check_file
 from fileparser import probe_file
 
 logger = logging.getLogger('reencode_job.worker')
+p_duration = re.compile(r"Duration: (?P<hour>\d{2}):(?P<min>\d{2}):(?P<sec>\d{2})\.(?P<ms>\d{2})")
+p_time = re.compile(r"time=(?P<hour>\d{2}):(?P<min>\d{2}):(?P<sec>\d{2})\.(?P<ms>\d{2})")
 
 
 def safe_log(num: float, base: int):
@@ -59,6 +67,31 @@ class Worker:
         self.input_filename = input_filename
         self.output_filename = output_filename
 
+        self._input_duration: Optional[int] = None
+        self._next_log = 0
+        self._progress: Optional[tqdm] = None
+
+    def __handle_ffmpeg_output(self, line: str):
+        if not self._input_duration and (m := p_duration.search(line)):
+            self._input_duration = timedelta(hours=int(m['hour']),
+                                             minutes=int(m['min']),
+                                             seconds=int(m['sec']),
+                                             milliseconds=int(m['ms'])).total_seconds()
+            self._progress = tqdm(total=self._input_duration, unit='s')
+
+        if m := p_time.search(line):
+            out_time = timedelta(hours=int(m['hour']),
+                                        minutes=int(m['min']),
+                                        seconds=int(m['sec']),
+                                        milliseconds=int(m['ms'])).total_seconds()
+            progress = out_time / self._input_duration
+            time_remaining = self._input_duration - out_time
+            if self._progress:
+                self._progress.update(out_time - self._progress.n)
+            if progress * 10 >= self._next_log:
+                logger.log(PROGRESS, "%d secs | %.2f%%", time_remaining, progress * 100)
+                self._next_log = int(progress * 10) + 1
+
     def work(self) -> bool:
         logger.log(PROGRESS, '[%d/%d] Processing "%s"', self.i, len(self.app.files), self.input_filename)
 
@@ -89,10 +122,11 @@ class Worker:
             return True
 
         if not self.app.args.is_dry_run_enabled:
-            with Popen(cmd, stdout=PIPE, stderr=STDOUT, universal_newlines=True) as ffmpeg:
+            with Popen(cmd, stdout=PIPE, stderr=STDOUT, universal_newlines=True) as ffmpeg, logging_redirect_tqdm():
                 while not self.app.is_interrupted and ffmpeg.poll() is None:
                     for line in ffmpeg.stdout:
                         logger.debug("[FFMPEG] %s", line.rstrip())
+                        self.__handle_ffmpeg_output(line)
                     if self.app.is_interrupted:
                         logger.info("Sending termination signal to ffmpeg subprocess")
                         ffmpeg.terminate()
@@ -121,6 +155,9 @@ class Worker:
         return True
 
     def _cleanup(self):
+        if self._progress:
+            self._progress.close()
+
         if self.app.args.is_replace_enabled:
             logger.log(DESTRUCTIVE, 'Replacing "%s"', self.input_filename)
             # Replace the original file but keep the new extension

@@ -5,8 +5,8 @@ from colorama import Fore, Style, init
 # Initialize colorama
 init(autoreset=True)
 
-PROGRESS = logging.INFO + 1
-SKIP = logging.INFO + 2
+PROGRESS = logging.DEBUG + 1
+SKIP = logging.INFO + 1
 DESTRUCTIVE = logging.WARNING + 1
 STOP = logging.WARNING + 2
 ROLLBACK = logging.ERROR + 1
@@ -15,9 +15,7 @@ ROLLBACK = logging.ERROR + 1
 # Custom formatter class
 class ColoredFormatter(logging.Formatter):
     COLORS = {
-        logging.DEBUG: Style.DIM + Fore.WHITE,
         logging.INFO: Fore.GREEN,
-        PROGRESS: Fore.CYAN,
         SKIP: Fore.MAGENTA,
         logging.WARNING: Fore.YELLOW,
         DESTRUCTIVE: Style.BRIGHT + Fore.YELLOW,
