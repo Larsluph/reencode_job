@@ -8,7 +8,6 @@ from subprocess import Popen, PIPE, STDOUT
 from typing import Optional
 
 from tqdm import tqdm
-from tqdm.contrib.logging import logging_redirect_tqdm
 
 from app import App
 from colorized_logger import PROGRESS, SKIP, DESTRUCTIVE, ROLLBACK
@@ -122,7 +121,7 @@ class Worker:
             return True
 
         if not self.app.args.is_dry_run_enabled:
-            with Popen(cmd, stdout=PIPE, stderr=STDOUT, universal_newlines=True) as ffmpeg, logging_redirect_tqdm():
+            with Popen(cmd, stdout=PIPE, stderr=STDOUT, universal_newlines=True) as ffmpeg:
                 while not self.app.is_interrupted and ffmpeg.poll() is None:
                     for line in ffmpeg.stdout:
                         logger.debug("[FFMPEG] %s", line.rstrip())

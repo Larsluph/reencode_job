@@ -1,10 +1,12 @@
 import logging
+import sys
 from argparse import ArgumentParser
 from datetime import datetime
 from os.path import join
 from pathlib import Path
 from signal import signal, SIGINT, SIGTERM
-from sys import stdout
+
+from tqdm.contrib.logging import logging_redirect_tqdm
 
 import colorized_logger
 from app import App
@@ -39,7 +41,7 @@ if __name__ == '__main__':
     fh.setLevel(logging.DEBUG)
     fh.setFormatter(logging.Formatter(LOG_MESSAGE_FORMAT))
 
-    ch = logging.StreamHandler(stdout)
+    ch = logging.StreamHandler(sys.stdout)
     ch.setLevel(logging.INFO)
     ch.setFormatter(colorized_logger.ColoredFormatter(LOG_MESSAGE_FORMAT))
 
@@ -60,10 +62,14 @@ if __name__ == '__main__':
     signal(SIGINT, app.signal_handler)
     signal(SIGTERM, app.signal_handler)
 
-    for i, (input_filename, output_filename) in enumerate(zip(app.files, app.outs), start=1):
-        worker = Worker(app, i, input_filename, output_filename)
-        if not worker.work():
-            break
-        if STOP_FILE.exists():
-            logger.log(colorized_logger.STOP, 'Stop file found, exiting...')
-            break
+    with logging_redirect_tqdm(loggers=[logger]):
+        for i, (input_filename, output_filename) in enumerate(zip(app.files, app.outs), start=1):
+            worker = Worker(app, i, input_filename, output_filename)
+            if not worker.work():
+                break
+            if STOP_FILE.exists():
+                logger.log(colorized_logger.STOP, 'Stop file found, exiting...')
+                break
+            if app.is_interrupted:
+                logger.log(colorized_logger.STOP, 'Interrupted, exiting...')
+                break

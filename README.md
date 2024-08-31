@@ -47,6 +47,10 @@ git clone git@github.com:Larsluph/reencode_job.git
 cd reencode_job
 ```
 
+> [!IMPORTANT]
+> To ensure correct log level is applied to tqdm's redirected logger, you have to edit the tqdm files directly.
+> See [PR](https://github.com/tqdm/tqdm/pull/1333) for changes.
+
 ## Configuration
 
 Everything is configurable from the `config.py` file.
