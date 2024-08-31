@@ -44,6 +44,7 @@ class TestCommandGenerator(TestCase):
                                              self.metadata,
                                              FileCheckError.NONE)
             self.assertEqual(result, ['ffmpeg', '-hide_banner', '-y',
+                                      '-hwaccel', 'cuda', '-hwaccel_output_format', 'cuda',
                                       '-i', 'input_path',
                                       '-c', 'copy',
                                       'output_path'])
@@ -55,6 +56,7 @@ class TestCommandGenerator(TestCase):
                                              self.metadata,
                                              FileCheckError.AUDIO_BITRATE)
             self.assertEqual(result, ['ffmpeg', '-hide_banner', '-y',
+                                      '-hwaccel', 'cuda', '-hwaccel_output_format', 'cuda',
                                       '-i', 'input_path',
                                       '-c:a', 'aac',
                                       '-b:a', '192000',
@@ -66,8 +68,9 @@ class TestCommandGenerator(TestCase):
             result = generate_ffmpeg_command(
                 Path("input_path"), Path("output_path"), self.metadata, FileCheckError.VIDEO_RESOLUTION)
             self.assertEqual(result, ['ffmpeg', '-hide_banner', '-y',
+                                      '-hwaccel', 'cuda', '-hwaccel_output_format', 'cuda',
                                       '-i', 'input_path',
                                       '-c:a', 'copy',
-                                      '-c:v', 'hevc',
+                                      '-c:v', 'hevc_nvenc',
                                       '-vf', 'scale=1920:1080',
                                       'output_path'])
