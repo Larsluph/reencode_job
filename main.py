@@ -7,6 +7,7 @@ from signal import signal, SIGINT, SIGTERM
 from sys import stdout
 
 from app import App
+from colorized_logger import ColoredFormatter
 from config import LOG_LOCATION, LOG_DATE_FORMAT, LOG_MESSAGE_FORMAT, STOP_FILE
 from worker import Worker
 
@@ -31,16 +32,16 @@ if __name__ == '__main__':
                         help='remove processed content if an error occurs')
     app = App(parser.parse_args())
 
-    formatter = logging.Formatter(LOG_MESSAGE_FORMAT)
-
-    fh = logging.FileHandler(join(LOG_LOCATION,
-                                  datetime.now().strftime(LOG_DATE_FORMAT)))
+    fh = logging.FileHandler(filename=join(LOG_LOCATION,
+                                           datetime.now().strftime(LOG_DATE_FORMAT)),
+                             mode='w',
+                             encoding='utf-8')
     fh.setLevel(logging.DEBUG)
-    fh.setFormatter(formatter)
+    fh.setFormatter(logging.Formatter(LOG_MESSAGE_FORMAT))
 
     ch = logging.StreamHandler(stdout)
     ch.setLevel(logging.INFO)
-    ch.setFormatter(formatter)
+    ch.setFormatter(ColoredFormatter(LOG_MESSAGE_FORMAT))
 
     logger = logging.getLogger('reencode_job')
     logger.setLevel(logging.DEBUG)
