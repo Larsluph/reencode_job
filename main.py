@@ -6,6 +6,7 @@ from os.path import join
 from pathlib import Path
 from signal import signal, SIGINT, SIGTERM
 
+from tqdm import tqdm
 from tqdm.contrib.logging import logging_redirect_tqdm
 
 import colorized_logger
@@ -63,7 +64,10 @@ if __name__ == '__main__':
     signal(SIGTERM, app.signal_handler)
 
     with logging_redirect_tqdm(loggers=[logger]):
-        for i, (input_filename, output_filename) in enumerate(zip(app.files, app.outs), start=1):
+        for i, (input_filename, output_filename) in tqdm(enumerate(zip(app.files, app.outs), start=1),
+                                                         total=len(app.files),
+                                                         unit='file',
+                                                         desc='Files processed'):
             worker = Worker(app, i, input_filename, output_filename)
             if not worker.work():
                 break

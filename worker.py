@@ -76,7 +76,10 @@ class Worker:
                                              minutes=int(m['min']),
                                              seconds=int(m['sec']),
                                              milliseconds=int(m['ms'])).total_seconds()
-            self._progress = tqdm(total=self._input_duration, unit='s')
+            self._progress = tqdm(total=self._input_duration,
+                                  desc='Current job progress',
+                                  unit='sec',
+                                  leave=False)
 
         if m := p_time.search(line):
             out_time = timedelta(hours=int(m['hour']),
