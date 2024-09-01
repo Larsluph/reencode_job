@@ -94,20 +94,18 @@ class Worker:
                 logger.log(PROGRESS, "%d secs | %.2f%%", time_remaining, progress * 100)
                 self._next_log = int(progress * 10) + 1
 
-    def work(self) -> bool:
+    def work(self):
         logger.log(PROGRESS, '[%d/%d] Processing "%s"', self.i, len(self.app.files), self.input_filename)
 
         file_metadata = probe_file(self.input_filename)
         if file_metadata is None:
             logger.log(SKIP, 'Skipping')
-            return True
 
         errors = check_file(file_metadata)
         if self.output_filename.exists() and self.app.args.is_overwrite_enabled:
             logger.log(DESTRUCTIVE, 'Overwriting "%s"', self.output_filename)
         elif self.output_filename.exists():
             logger.log(SKIP, 'Output file "%s" already exists, skipping', self.output_filename)
-            return True
         elif not (parent := self.output_filename.parent).exists():
             makedirs(parent)
         cmd = generate_ffmpeg_command(self.input_filename,
@@ -121,7 +119,6 @@ class Worker:
 
         if not errors:
             logger.log(SKIP, 'Video matches expectations, skipping')
-            return True
 
         if not self.app.args.is_dry_run_enabled:
             with Popen(cmd, stdout=PIPE, stderr=STDOUT, universal_newlines=True) as ffmpeg:
@@ -142,8 +139,7 @@ class Worker:
 
                     if self.app.is_interrupted:
                         logger.log(SKIP, 'Interrupted')
-                        return False
-                    return True
+                    return
 
             in_size = file_metadata.file_size
             out_size = self.output_filename.stat().st_size
@@ -153,8 +149,6 @@ class Worker:
                         calc_ratio(in_size, out_size), format_bytes(in_size - out_size))
 
             self._cleanup()
-
-        return True
 
     def _cleanup(self):
         if self._progress:

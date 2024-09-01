@@ -69,11 +69,15 @@ if __name__ == '__main__':
                                                          unit='file',
                                                          desc='Files processed'):
             worker = Worker(app, i, input_filename, output_filename)
-            if not worker.work():
-                break
+            try:
+                worker.work()
+            except Exception as e:
+                logger.exception('Unhandled exception', exc_info=e)
+
             if STOP_FILE.exists():
                 logger.log(colorized_logger.STOP, 'Stop file found, exiting...')
                 break
+
             if app.is_interrupted:
                 logger.log(colorized_logger.STOP, 'Interrupted, exiting...')
                 break
