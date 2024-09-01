@@ -77,19 +77,19 @@ class Worker:
                                              seconds=int(m['sec']),
                                              milliseconds=int(m['ms'])).total_seconds()
             self._progress = tqdm(total=self._input_duration,
-                                  desc='Current job progress',
+                                  desc=self.input_filename.name,
                                   unit='sec',
                                   leave=False)
 
-        if m := p_time.search(line):
+        if self._progress and (m := p_time.search(line)):
             out_time = timedelta(hours=int(m['hour']),
-                                        minutes=int(m['min']),
-                                        seconds=int(m['sec']),
-                                        milliseconds=int(m['ms'])).total_seconds()
+                                 minutes=int(m['min']),
+                                 seconds=int(m['sec']),
+                                 milliseconds=int(m['ms'])).total_seconds()
+            self._progress.update(out_time - self._progress.n)
+
             progress = out_time / self._input_duration
             time_remaining = self._input_duration - out_time
-            if self._progress:
-                self._progress.update(out_time - self._progress.n)
             if progress * 10 >= self._next_log:
                 logger.log(PROGRESS, "%d secs | %.2f%%", time_remaining, progress * 100)
                 self._next_log = int(progress * 10) + 1
