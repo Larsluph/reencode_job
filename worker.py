@@ -162,10 +162,14 @@ class Worker:
             # Replace the original file but keep the new extension
             new_name = Path(self.input_filename).with_suffix(self.output_filename.suffix)
             if not self.app.args.is_dry_run_enabled:
-                replace(self.output_filename, new_name)
-                if self.input_filename != new_name:
-                    logger.log(DESTRUCTIVE, 'Extension has changed, removing original file')
-                    self.input_filename.unlink()
+                try:
+                    replace(self.output_filename, new_name)
+                    if self.input_filename != new_name:
+                        logger.log(DESTRUCTIVE, 'Extension has changed, removing original file')
+                        self.input_filename.unlink()
+                except OSError as e:
+                    known_errors = {5}  # Access denied
+                    logger.log(SKIP, 'Failed to replace "%s" with "%s"', self.input_filename, new_name, exc_info=e.winerror not in known_errors)
         elif self.app.args.is_remove_enabled:
             logger.log(DESTRUCTIVE, 'Removing "%s"', self.input_filename)
             # Remove the original file
