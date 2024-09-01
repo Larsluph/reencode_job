@@ -100,12 +100,14 @@ class Worker:
         file_metadata = probe_file(self.input_filename)
         if file_metadata is None:
             logger.log(SKIP, 'Skipping')
+            return
 
         errors = check_file(file_metadata)
         if self.output_filename.exists() and self.app.args.is_overwrite_enabled:
             logger.log(DESTRUCTIVE, 'Overwriting "%s"', self.output_filename)
         elif self.output_filename.exists():
             logger.log(SKIP, 'Output file "%s" already exists, skipping', self.output_filename)
+            return
         elif not (parent := self.output_filename.parent).exists():
             makedirs(parent)
         cmd = generate_ffmpeg_command(self.input_filename,
@@ -119,6 +121,7 @@ class Worker:
 
         if not errors:
             logger.log(SKIP, 'Video matches expectations, skipping')
+            return
 
         if not self.app.args.is_dry_run_enabled:
             with Popen(cmd, stdout=PIPE, stderr=STDOUT, universal_newlines=True) as ffmpeg:
