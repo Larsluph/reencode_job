@@ -53,13 +53,6 @@ def calc_ratio(isize, osize):
 
 class Worker:
     """Worker class that processes a file"""
-    app: App
-    i: int
-    max_i: int
-    input_filename: Path
-    output_filename: Path
-    process: Popen = None
-
     def __init__(self, app: App, i: int, input_filename: Path, output_filename: Path):
         self.app = app
         self.i = i
@@ -94,6 +87,70 @@ class Worker:
                 logger.log(PROGRESS, "%d secs | %.2f%%", time_remaining, progress * 100)
                 self._next_log = int(progress * 10) + 1
 
+    def __replace_output_file(self):
+        # Replace the original file but keep the new extension
+        new_name = Path(self.input_filename).with_suffix(self.output_filename.suffix)
+        try:
+            replace(self.output_filename, new_name)
+            if self.input_filename != new_name:
+                logger.log(DESTRUCTIVE, 'Extension has changed, removing original file')
+                self.input_filename.unlink()
+        except OSError as e:
+            known_errors = {5}  # Access denied
+            logger.log(SKIP, 'Failed to replace "%s" with "%s"', self.input_filename, new_name, exc_info=e.winerror not in known_errors)
+            return False
+        return True
+
+    def __handle_child_process_error(self, ffmpeg):
+        logger.error('Failed to process "%s": return code was %d',
+                     self.input_filename, ffmpeg.returncode)
+        if self.app.args.is_clean_on_error_enabled:
+            logger.log(ROLLBACK, 'Removing job leftover "%s"', self.output_filename)
+            self.output_filename.unlink()
+        if self.app.is_interrupted:
+            logger.log(SKIP, 'Interrupted')
+
+    def __child_process_mainloop(self, ffmpeg):
+        while not self.app.is_interrupted and ffmpeg.poll() is None:
+            for line in ffmpeg.stdout:
+                logger.debug("[FFMPEG] %s", line.rstrip())
+                self.__handle_ffmpeg_output(line)
+            if self.app.is_interrupted:
+                logger.info("Sending termination signal to ffmpeg subprocess")
+                ffmpeg.terminate()
+
+    def __log_result_stats(self, file_metadata):
+        in_size = file_metadata.file_size
+        out_size = self.output_filename.stat().st_size
+        logger.info('%s -> %s (ratio: %.2fx) (saved: %s)',
+                    format_bytes(in_size), format_bytes(out_size),
+                    calc_ratio(in_size, out_size), format_bytes(in_size - out_size))
+
+    def __generate_ffmpeg_cmd(self, file_metadata):
+        errors = check_file(file_metadata)
+        cmd = generate_ffmpeg_command(self.input_filename,
+                                      self.output_filename,
+                                      file_metadata,
+                                      errors)
+        logger.debug(file_metadata)
+        logger.info(errors)
+        logger.debug(cmd)
+        return cmd, errors
+
+    def _cleanup(self):
+        if self._progress:
+            self._progress.close()
+
+        if self.app.args.is_replace_enabled:
+            logger.log(DESTRUCTIVE, 'Replacing "%s"', self.input_filename)
+            if not self.app.args.is_dry_run_enabled:
+                self.__replace_output_file()
+        elif self.app.args.is_remove_enabled:
+            logger.log(DESTRUCTIVE, 'Removing "%s"', self.input_filename)
+            # Remove the original file
+            if not self.app.args.is_dry_run_enabled:
+                self.input_filename.unlink()
+
     def work(self):
         logger.log(PROGRESS, '[%d/%d] Processing "%s"', self.i, len(self.app.files), self.input_filename)
 
@@ -102,7 +159,6 @@ class Worker:
             logger.log(SKIP, 'Skipping')
             return
 
-        errors = check_file(file_metadata)
         if self.output_filename.exists() and self.app.args.is_overwrite_enabled:
             logger.log(DESTRUCTIVE, 'Overwriting "%s"', self.output_filename)
         elif self.output_filename.exists():
@@ -110,68 +166,17 @@ class Worker:
             return
         elif not (parent := self.output_filename.parent).exists():
             makedirs(parent)
-        cmd = generate_ffmpeg_command(self.input_filename,
-                                      self.output_filename,
-                                      file_metadata,
-                                      errors)
 
-        logger.debug(file_metadata)
-        logger.info(errors)
-        logger.debug(cmd)
-
+        cmd, errors = self.__generate_ffmpeg_cmd(file_metadata)
         if not errors:
             logger.log(SKIP, 'Video matches expectations, skipping')
             return
 
         if not self.app.args.is_dry_run_enabled:
             with Popen(cmd, stdout=PIPE, stderr=STDOUT, universal_newlines=True) as ffmpeg:
-                while not self.app.is_interrupted and ffmpeg.poll() is None:
-                    for line in ffmpeg.stdout:
-                        logger.debug("[FFMPEG] %s", line.rstrip())
-                        self.__handle_ffmpeg_output(line)
-                    if self.app.is_interrupted:
-                        logger.info("Sending termination signal to ffmpeg subprocess")
-                        ffmpeg.terminate()
-
+                self.__child_process_mainloop(ffmpeg)
                 if ffmpeg.wait() != 0:
-                    logger.error('Failed to process "%s": return code was %d',
-                                 self.input_filename, ffmpeg.returncode)
-                    if self.app.args.is_clean_on_error_enabled:
-                        logger.log(ROLLBACK, 'Removing job leftover "%s"', self.output_filename)
-                        self.output_filename.unlink()
-
-                    if self.app.is_interrupted:
-                        logger.log(SKIP, 'Interrupted')
+                    self.__handle_child_process_error(ffmpeg)
                     return
-
-            in_size = file_metadata.file_size
-            out_size = self.output_filename.stat().st_size
-
-            logger.info('%s -> %s (ratio: %.2fx) (saved: %s)',
-                        format_bytes(in_size), format_bytes(out_size),
-                        calc_ratio(in_size, out_size), format_bytes(in_size - out_size))
-
+            self.__log_result_stats(file_metadata)
             self._cleanup()
-
-    def _cleanup(self):
-        if self._progress:
-            self._progress.close()
-
-        if self.app.args.is_replace_enabled:
-            logger.log(DESTRUCTIVE, 'Replacing "%s"', self.input_filename)
-            # Replace the original file but keep the new extension
-            new_name = Path(self.input_filename).with_suffix(self.output_filename.suffix)
-            if not self.app.args.is_dry_run_enabled:
-                try:
-                    replace(self.output_filename, new_name)
-                    if self.input_filename != new_name:
-                        logger.log(DESTRUCTIVE, 'Extension has changed, removing original file')
-                        self.input_filename.unlink()
-                except OSError as e:
-                    known_errors = {5}  # Access denied
-                    logger.log(SKIP, 'Failed to replace "%s" with "%s"', self.input_filename, new_name, exc_info=e.winerror not in known_errors)
-        elif self.app.args.is_remove_enabled:
-            logger.log(DESTRUCTIVE, 'Removing "%s"', self.input_filename)
-            # Remove the original file
-            if not self.app.args.is_dry_run_enabled:
-                self.input_filename.unlink()
