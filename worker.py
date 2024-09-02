@@ -162,7 +162,8 @@ class Worker:
         if self.output_filename.exists() and self.app.args.is_overwrite_enabled:
             logger.log(DESTRUCTIVE, 'Overwriting "%s"', self.output_filename)
         elif self.output_filename.exists():
-            logger.log(SKIP, 'Output file "%s" already exists, skipping', self.output_filename)
+            logger.log(DESTRUCTIVE, 'Output file "%s" already exists, replacing', self.output_filename)
+            self.__replace_output_file()
             return
         elif not (parent := self.output_filename.parent).exists():
             makedirs(parent)
