@@ -63,6 +63,10 @@ def calc_aspect_ratio(width: int, height: int):
 
 def probe_file(file_path: Path) -> Optional[FileMetadata]:
     """Parse the ffprobe output and return a dictionary of the metadata"""
+    if not file_path.exists():
+        logger.log(SKIP, "File doesn't exist anymore")
+        return None
+
     try:
         result = run(['ffprobe', '-v', 'error', '-print_format', 'json',
                       '-show_format', '-show_streams', str(file_path)],
