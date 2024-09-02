@@ -97,7 +97,7 @@ class Worker:
                 self.input_filename.unlink()
         except OSError as e:
             known_errors = {5}  # Access denied
-            logger.log(SKIP, 'Failed to replace "%s" with "%s"', self.input_filename, new_name, exc_info=e.winerror not in known_errors)
+            logger.log(SKIP, 'Failed to replace', exc_info=e.winerror not in known_errors)
             return False
         return True
 
@@ -105,7 +105,7 @@ class Worker:
         logger.error('Failed to process "%s": return code was %d',
                      self.input_filename, ffmpeg.returncode)
         if self.app.args.is_clean_on_error_enabled:
-            logger.log(ROLLBACK, 'Removing job leftover "%s"', self.output_filename)
+            logger.log(ROLLBACK, 'Removing job leftover')
             self.output_filename.unlink()
         if self.app.is_interrupted:
             logger.log(SKIP, 'Interrupted')
