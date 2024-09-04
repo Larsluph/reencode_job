@@ -106,7 +106,10 @@ class Worker:
                      self.input_filename, ffmpeg.returncode)
         if self.app.args.is_clean_on_error_enabled:
             logger.log(ROLLBACK, 'Removing job leftover')
-            self.output_filename.unlink()
+            if self.output_filename.exists():
+                self.output_filename.unlink()
+            else:
+                logger.log(SKIP, 'Output file "%s" does not exist', self.output_filename)
         if self.app.is_interrupted:
             logger.log(SKIP, 'Interrupted')
 
