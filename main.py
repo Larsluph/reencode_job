@@ -33,6 +33,8 @@ if __name__ == '__main__':
                         help='replace original content with the processed one')
     parser.add_argument('--clean-on-error', action='store_true',
                         help='remove processed content if an error occurs')
+    parser.add_argument('-v', '--verbose', action='store_true',
+                        help='increase console output verbosity')
     app = App(parser.parse_args())
 
     fh = logging.FileHandler(filename=join(LOG_LOCATION,
@@ -43,7 +45,7 @@ if __name__ == '__main__':
     fh.setFormatter(logging.Formatter(LOG_MESSAGE_FORMAT))
 
     ch = logging.StreamHandler(sys.stdout)
-    ch.setLevel(logging.INFO)
+    ch.setLevel(logging.DEBUG if app.args.is_verbose_enabled else logging.INFO)
     ch.setFormatter(colorized_logger.ColoredFormatter(LOG_MESSAGE_FORMAT))
 
     logger = logging.getLogger('reencode_job')

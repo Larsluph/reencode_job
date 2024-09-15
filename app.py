@@ -30,6 +30,7 @@ class Args:
     """Represented by the optional --clean-on-error parameter"""
     is_filelist_enabled: bool
     """Represented by the optional -f/--filelist parameter"""
+    is_verbose_enabled: bool
 
 
 class App:
@@ -51,7 +52,8 @@ class App:
                          args.replace,
                          args.overwrite,
                          args.clean_on_error,
-                         args.filelist)
+                         args.filelist,
+                         args.verbose)
 
         self.glob_filter = args.filter
         self.is_interrupted = False
