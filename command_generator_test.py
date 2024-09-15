@@ -19,22 +19,22 @@ class TestCommandGenerator(TestCase):
 
     def test_check_flag_none_should_return_false(self):
         result = check_flag_none(FileCheckError.AUDIO_BITRATE,
-                                 FileCheckError.ANY_AUDIO)
+                                 FileCheckError.ALL_AUDIO)
         self.assertFalse(result, "check_flag_none should return False")
 
     def test_check_flag_none_should_return_true(self):
         result = check_flag_none(FileCheckError.VIDEO_CODEC,
-                                 FileCheckError.ANY_AUDIO)
+                                 FileCheckError.ALL_AUDIO)
         self.assertTrue(result, "check_flag_none should return True")
 
     def test_check_flag_any_should_return_false(self):
         result = check_flag_any(FileCheckError.VIDEO_CODEC,
-                                FileCheckError.ANY_AUDIO)
+                                FileCheckError.ALL_AUDIO)
         self.assertFalse(result, "check_flag_any should return False")
 
     def test_check_flag_any_should_return_true(self):
         result = check_flag_any(FileCheckError.AUDIO_BITRATE,
-                                FileCheckError.ANY_AUDIO)
+                                FileCheckError.ALL_AUDIO)
         self.assertTrue(result, "check_flag_any should return True")
 
     def test_generate_ffmpeg_command_returns_copy(self):

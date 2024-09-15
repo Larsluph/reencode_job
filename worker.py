@@ -12,7 +12,7 @@ from tqdm import tqdm
 from app import App
 from colorized_logger import PROGRESS, SKIP, DESTRUCTIVE, ROLLBACK
 from command_generator import generate_ffmpeg_command
-from filechecker import check_file
+from filechecker import check_file, FileCheckError
 from fileparser import probe_file
 
 logger = logging.getLogger('reencode_job.worker')
@@ -130,7 +130,11 @@ class Worker:
                     calc_ratio(in_size, out_size), format_bytes(in_size - out_size))
 
     def __generate_ffmpeg_cmd(self, file_metadata):
-        errors = check_file(file_metadata)
+        if self.app.args.is_reencode_forced:
+            errors = FileCheckError.ALL
+            logger.log(DESTRUCTIVE, 'Forcing reencode')
+        else:
+            errors = check_file(file_metadata)
         cmd = generate_ffmpeg_command(self.input_filename,
                                       self.output_filename,
                                       file_metadata,

@@ -16,7 +16,7 @@ def check_flag_any(errors: FileCheckError, flag: FileCheckError):
 def generate_audio_params(metadata: AudioMetadata, errors: FileCheckError):
     params = []
 
-    if check_flag_any(errors, FileCheckError.ANY_AUDIO):
+    if check_flag_any(errors, FileCheckError.ALL_AUDIO):
         audio_codec = CRITERIAS['audio']['codec']
         params.extend(('-c:a', audio_codec if audio_codec else metadata.codec))
 
@@ -35,7 +35,7 @@ def generate_audio_params(metadata: AudioMetadata, errors: FileCheckError):
 def generate_video_params(metadata: VideoMetadata, errors: FileCheckError):
     params = []
 
-    if check_flag_any(errors, FileCheckError.ANY_VIDEO):
+    if check_flag_any(errors, FileCheckError.ALL_VIDEO):
         video_codec = CRITERIAS['video']['codec_encoder']
         params.extend(('-c:v', video_codec if video_codec else metadata.codec))
 
@@ -85,13 +85,13 @@ def generate_ffmpeg_command(input_file: Path,
         params.extend(('-c', 'copy'))
     else:
         # Audio errors
-        if check_flag_none(errors, FileCheckError.ANY_AUDIO):
+        if check_flag_none(errors, FileCheckError.ALL_AUDIO):
             params.extend(('-c:a', 'copy'))
         else:
             params.extend(generate_audio_params(metadata.audio, errors))
 
         # Video errors
-        if check_flag_none(errors, FileCheckError.ANY_VIDEO):
+        if check_flag_none(errors, FileCheckError.ALL_VIDEO):
             params.extend(('-c:v', 'copy'))
         else:
             params.extend(generate_video_params(metadata.video, errors))

@@ -31,6 +31,9 @@ class Args:
     is_filelist_enabled: bool
     """Represented by the optional -f/--filelist parameter"""
     is_verbose_enabled: bool
+    """Represented by the optional -v/--verbose parameter"""
+    is_reencode_forced: bool
+    """Represented by the optional --force-reencode parameter"""
 
 
 class App:
@@ -53,7 +56,8 @@ class App:
                          args.overwrite,
                          args.clean_on_error,
                          args.filelist,
-                         args.verbose)
+                         args.verbose,
+                         args.force_reencode)
 
         self.glob_filter = args.filter
         self.is_interrupted = False

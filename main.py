@@ -18,9 +18,8 @@ if __name__ == '__main__':
     parser = ArgumentParser(description="Video re-encoder with ffmpeg")
     parser.add_argument('path', type=Path, help='path to video content')
     parser.add_argument('-o', '--output', type=Path, help='path to output content')
-    parser.add_argument('--overwrite', action='store_true',
+    parser.add_argument('-F', '--overwrite', action='store_true',
                         help='Replace output if it already exists')
-    parser.add_argument('--filter', help='glob pattern to filter input files to process')
     parser.add_argument('-f', '--filelist', action='store_true',
                         help='path is a file with a list of files to process, '
                              'if OUTPUT is specified the file list should be composed of '
@@ -29,12 +28,15 @@ if __name__ == '__main__':
                         help='perform a trial run without changes made')
     parser.add_argument('-rm', '--remove', action='store_true',
                         help='remove original content after processing')
+    parser.add_argument('-v', '--verbose', action='store_true',
+                        help='increase console output verbosity')
     parser.add_argument('--replace', action='store_true',
                         help='replace original content with the processed one')
     parser.add_argument('--clean-on-error', action='store_true',
                         help='remove processed content if an error occurs')
-    parser.add_argument('-v', '--verbose', action='store_true',
-                        help='increase console output verbosity')
+    parser.add_argument('--filter', help='glob pattern to filter input files to process')
+    parser.add_argument('--force-reencode', action='store_true',
+                        help='Force reencoding all files')
     app = App(parser.parse_args())
 
     fh = logging.FileHandler(filename=join(LOG_LOCATION,
