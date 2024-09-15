@@ -48,7 +48,7 @@ def check_file(metadata: FileMetadata) -> FileCheckError:
     if CRITERIAS['audio']['channels'] and audio.channels > CRITERIAS['audio']['channels']:
         errors |= FileCheckError.AUDIO_CHANNELS
 
-    if CRITERIAS['audio']['bitrate'] and audio.bitrate > CRITERIAS['audio']['bitrate']['threshold']:
+    if CRITERIAS['audio']['bitrate'] and (audio.bitrate == 0 or audio.bitrate > CRITERIAS['audio']['bitrate']['threshold']):
         errors |= FileCheckError.AUDIO_BITRATE
 
     video = metadata.video
@@ -67,7 +67,7 @@ def check_file(metadata: FileMetadata) -> FileCheckError:
     if CRITERIAS['video']['fps'] and video.frame_rate > CRITERIAS['video']['fps']:
         errors |= FileCheckError.VIDEO_FPS
 
-    if CRITERIAS['video']['bitrate'] and video.bitrate > CRITERIAS['video']['bitrate']['threshold']:
+    if CRITERIAS['video']['bitrate'] and (video.bitrate == 0 or video.bitrate > CRITERIAS['video']['bitrate']['threshold']):
         errors |= FileCheckError.VIDEO_BITRATE
 
     return errors
