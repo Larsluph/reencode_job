@@ -26,7 +26,7 @@ def safe_log(num: float, base: int):
     return math.log(math.fabs(num), base)
 
 def trim_filename(filename: Path) -> str:
-    return (filename.name[:49] + "...") if len(filename.name) > 50 else filename.name
+    return (filename.name[:73] + "...") if len(filename.name) > 75 else filename.name
 
 
 def format_float(num: float) -> str:
