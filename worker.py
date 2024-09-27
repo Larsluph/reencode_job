@@ -139,9 +139,6 @@ class Worker:
                                       self.output_filename,
                                       file_metadata,
                                       errors)
-        logger.debug(file_metadata)
-        logger.info(errors)
-        logger.debug(cmd)
         return cmd, errors
 
     def _cleanup(self):
@@ -179,6 +176,10 @@ class Worker:
         if not errors:
             logger.log(SKIP, 'Video matches expectations, skipping')
             return
+
+        logger.debug(file_metadata)
+        logger.info(errors)
+        logger.debug(cmd)
 
         if not self.app.args.is_dry_run_enabled:
             with Popen(cmd, stdout=PIPE, stderr=STDOUT, universal_newlines=True) as ffmpeg:

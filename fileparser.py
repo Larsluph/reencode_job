@@ -79,6 +79,9 @@ def probe_file(file_path: Path) -> Optional[FileMetadata]:
         return None
 
     output = result.stdout
+    if not output:
+        logger.warning("No output from ffprobe")
+        return None
     json_output: dict = load_json(output)
 
     video_stream: dict
