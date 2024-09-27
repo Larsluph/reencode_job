@@ -5,6 +5,7 @@ from datetime import datetime
 from os.path import join
 from pathlib import Path
 from signal import signal, SIGINT, SIGTERM
+from time import sleep
 
 from tqdm import tqdm
 from tqdm.contrib.logging import logging_redirect_tqdm
@@ -37,7 +38,11 @@ if __name__ == '__main__':
     parser.add_argument('--filter', help='glob pattern to filter input files to process')
     parser.add_argument('--force-reencode', action='store_true',
                         help='Force reencoding all files')
+    parser.add_argument('-w', '--watch', action='store_true',
+                        help='Watch for new files after processing all files instead of exiting')
     app = App(parser.parse_args())
+    signal(SIGINT, app.signal_handler)
+    signal(SIGTERM, app.signal_handler)
 
     fh = logging.FileHandler(filename=join(LOG_LOCATION,
                                            datetime.now().strftime(LOG_DATE_FORMAT)),
@@ -62,26 +67,30 @@ if __name__ == '__main__':
     add_log_level('STOP')
     add_log_level('ROLLBACK')
 
-    app.init_job()
+    while True:
+        app.init_job()
 
-    signal(SIGINT, app.signal_handler)
-    signal(SIGTERM, app.signal_handler)
+        with logging_redirect_tqdm(loggers=[logger]):
+            for i, (input_filename, output_filename) in tqdm(enumerate(zip(app.files, app.outs), start=1),
+                                                             total=len(app.files),
+                                                             unit='file',
+                                                             desc='Files processed'):
+                worker = Worker(app, i, input_filename, output_filename)
+                try:
+                    worker.work()
+                except Exception as e:
+                    logger.exception('Unhandled exception', exc_info=e)
 
-    with logging_redirect_tqdm(loggers=[logger]):
-        for i, (input_filename, output_filename) in tqdm(enumerate(zip(app.files, app.outs), start=1),
-                                                         total=len(app.files),
-                                                         unit='file',
-                                                         desc='Files processed'):
-            worker = Worker(app, i, input_filename, output_filename)
-            try:
-                worker.work()
-            except Exception as e:
-                logger.exception('Unhandled exception', exc_info=e)
+                if STOP_FILE.exists():
+                    logger.log(colorized_logger.STOP, 'Stop file found, exiting...')
+                    break
 
-            if STOP_FILE.exists():
-                logger.log(colorized_logger.STOP, 'Stop file found, exiting...')
-                break
+                if app.is_interrupted:
+                    logger.log(colorized_logger.STOP, 'Interrupted, exiting...')
+                    break
 
-            if app.is_interrupted:
-                logger.log(colorized_logger.STOP, 'Interrupted, exiting...')
-                break
+        if not app.args.is_watch_enabled or app.is_interrupted:
+            break
+
+        logger.info("Waiting 30 seconds...")
+        sleep(30)

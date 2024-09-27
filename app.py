@@ -34,6 +34,8 @@ class Args:
     """Represented by the optional -v/--verbose parameter"""
     is_reencode_forced: bool
     """Represented by the optional --force-reencode parameter"""
+    is_watch_enabled: bool
+    """Represented by the optional -w/--watch parameter"""
 
 
 class App:
@@ -57,7 +59,8 @@ class App:
                          args.clean_on_error,
                          args.filelist,
                          args.verbose,
-                         args.force_reencode)
+                         args.force_reencode,
+                         args.watch)
 
         self.glob_filter = args.filter
         self.is_interrupted = False
@@ -187,6 +190,7 @@ class App:
             logger.info("Dry run enabled")
 
         self.files.clear()
+        self.outs.clear()
 
         if self.args.content_path.is_file() and self.args.is_filelist_enabled:
             self._scan_filelist()
