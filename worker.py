@@ -25,6 +25,9 @@ def safe_log(num: float, base: int):
         return num
     return math.log(math.fabs(num), base)
 
+def trim_filename(filename: Path) -> str:
+    return (filename.name[:49] + "...") if len(filename.name) > 50 else filename.name
+
 
 def format_float(num: float) -> str:
     digits = safe_log(num, 10)
@@ -70,7 +73,7 @@ class Worker:
                                              seconds=int(m['sec']),
                                              milliseconds=int(m['ms'])).total_seconds()
             self._progress = tqdm(total=self._input_duration,
-                                  desc=self.input_filename.name,
+                                  desc=trim_filename(self.input_filename),
                                   unit='sec',
                                   leave=False)
 
