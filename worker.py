@@ -168,7 +168,7 @@ class Worker:
 
         if self.output_filename.exists() and self.app.args.is_overwrite_enabled:
             logger.log(DESTRUCTIVE, 'Overwriting "%s"', self.output_filename)
-        elif self.output_filename.exists():
+        elif self.output_filename.exists() and self.app.args.is_replace_enabled:
             logger.log(DESTRUCTIVE, 'Output file "%s" already exists, replacing', self.output_filename)
             self.__replace_output_file()
             return
