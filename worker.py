@@ -131,6 +131,7 @@ class Worker:
         logger.info('%s -> %s (ratio: %.2fx) (saved: %s)',
                     format_bytes(in_size), format_bytes(out_size),
                     calc_ratio(in_size, out_size), format_bytes(in_size - out_size))
+        return in_size, out_size
 
     def __generate_ffmpeg_cmd(self, file_metadata):
         if self.app.args.is_reencode_forced:
@@ -144,11 +145,15 @@ class Worker:
                                       errors)
         return cmd, errors
 
-    def _cleanup(self):
+    def _cleanup(self, in_size: int, out_size: int):
         if self._progress:
             self._progress.close()
 
-        if self.app.args.is_replace_enabled:
+        if out_size > in_size:
+            logger.log(SKIP, 'Output file is larger than input file, cleaning output...')
+            if not self.app.args.is_dry_run_enabled:
+                self.output_filename.unlink()
+        elif self.app.args.is_replace_enabled:
             logger.log(DESTRUCTIVE, 'Replacing "%s"', self.input_filename)
             if not self.app.args.is_dry_run_enabled:
                 self.__replace_output_file()
@@ -190,5 +195,5 @@ class Worker:
                 if ffmpeg.wait() != 0:
                     self.__handle_child_process_error(ffmpeg)
                     return
-            self.__log_result_stats(file_metadata)
-            self._cleanup()
+            in_size, out_size = self.__log_result_stats(file_metadata)
+            self._cleanup(in_size, out_size)
